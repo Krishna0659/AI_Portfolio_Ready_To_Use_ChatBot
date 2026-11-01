@@ -1,0 +1,15 @@
+import {NextResponse} from 'next/server';
+import * as oidc from 'openid-client';
+import {cookies} from 'next/headers';
+import {pool} from '../../../../packages/db';
+import {login,session,mutation,cookieName,digest} from '../../../../packages/domain/auth';
+export const runtime='nodejs';
+async function config(){if(!process.env.GOOGLE_CLIENT_ID||!process.env.GOOGLE_CLIENT_SECRET)throw Error('Google sign-in needs configuration');return oidc.discovery(new URL('https://accounts.google.com'),process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET);}
+export async function GET(req:Request,{params}:{params:Promise<{action:string}>}){const {action}=await params;try{
+ if(action==='google'){const c=await config(),state=oidc.randomState(),nonce=oidc.randomNonce(),verifier=oidc.randomPKCECodeVerifier();await pool.query('INSERT INTO auth_flows(state,verifier,nonce) VALUES($1,$2,$3)',[state,verifier,nonce]);(await cookies()).set('oidc_state',state,{httpOnly:true,sameSite:'lax',secure:process.env.APP_ORIGIN?.startsWith('https:'),path:'/',maxAge:600});return NextResponse.redirect(oidc.buildAuthorizationUrl(c,{redirect_uri:process.env.APP_ORIGIN+'/api/auth/callback',scope:'openid email profile',state,nonce,code_challenge:await oidc.calculatePKCECodeChallenge(verifier),code_challenge_method:'S256'}));}
+ if(action==='callback'){const url=new URL(req.url),state=url.searchParams.get('state');if(!state||state!==(await cookies()).get('oidc_state')?.value)throw Error('Invalid login state');const result=await pool.query('DELETE FROM auth_flows WHERE state=$1 AND expires_at>now() RETURNING *',[state]);if(!result.rows.length)throw Error('Login expired');const f=result.rows[0];const tokens=await oidc.authorizationCodeGrant(await config(),new URL(process.env.APP_ORIGIN+url.pathname+url.search),{pkceCodeVerifier:f.verifier,expectedState:state,expectedNonce:f.nonce});const claims=tokens.claims()!;await login(claims.iss,claims.sub,typeof claims.name==='string'?claims.name:'Portfolio owner');(await cookies()).delete('oidc_state');return NextResponse.redirect(new URL('/',process.env.APP_ORIGIN));}
+ return NextResponse.json({error:'Not found'},{status:404});
+ }catch{return NextResponse.json({error:'Sign-in could not complete. Check configuration or start again.'},{status:400});}}
+export async function POST(req:Request,{params}:{params:Promise<{action:string}>}){const {action}=await params;if(req.headers.get('origin')!==process.env.APP_ORIGIN)return NextResponse.json({error:'Origin rejected'},{status:403});
+ if(action==='local'&&process.env.LOCAL_DEVELOPMENT_LOGIN==='true'&&['localhost','127.0.0.1'].includes(new URL(req.url).hostname)){await login('local-development','owner','Local owner');return NextResponse.json({ok:true});}
+ if(action==='logout'){const s=await session();if(s){try{mutation(req,s);}catch{return NextResponse.json({error:'Request rejected'},{status:403});}await pool.query('DELETE FROM sessions WHERE token_hash=$1',[s.token_hash]);}(await cookies()).delete(cookieName);return NextResponse.json({ok:true});}return NextResponse.json({error:'Unavailable'},{status:404});}
