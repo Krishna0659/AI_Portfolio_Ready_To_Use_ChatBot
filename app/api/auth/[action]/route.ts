@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server';
 import * as oidc from 'openid-client';
 import {cookies} from 'next/headers';
-import {pool} from '../../../../packages/db';
+import {identityPool as pool} from '../../../../packages/db';
 import {appendFile,mkdir} from 'node:fs/promises';
 import {authDiagnostic,authErrorMessage} from '../../../../packages/domain/auth-errors';
 import {sealFlow,openFlow,verifyGoogleCallback} from '../../../../packages/domain/oidc-flow';

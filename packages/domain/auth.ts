@@ -1,6 +1,6 @@
 import {cookies} from 'next/headers';
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
-import {pool} from '../db';
+import {identityPool as pool} from '../db';
 import {emptyProfile} from '../contracts/profile';
 export const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const cookieName=process.env.APP_ORIGIN?.startsWith('https:')?'__Host-portfolio_session':'portfolio_local_session';

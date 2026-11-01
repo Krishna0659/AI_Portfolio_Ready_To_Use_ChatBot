@@ -2,7 +2,7 @@ import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {unlink,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import type {PoolClient} from 'pg';
-import {pool,transaction} from '../db';
+import {pool,transaction,identityTransaction} from '../db';
 import {requireMembership} from './authorization';
 
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
@@ -11,8 +11,8 @@ export function objectPath(key:string){
  return path.resolve('.local/objects',key);
 }
 export async function recentSession(db:PoolClient,user:string,tokenHash:string){
- const r=await db.query("SELECT token_hash FROM sessions WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND absolute_expires_at>now() AND created_at>now()-interval '10 minutes' AND authenticated_at>now()-interval '10 minutes' AND authenticated_at<=now()+interval '1 minute'",[tokenHash,user]);
- if(!r.rowCount)throw Object.assign(Error('Sign in again before deleting data. A verified authentication time within 10 minutes is required. Google sessions without that claim cannot erase data yet.'),{status:403});
+ const r=await db.query('SELECT session_recent($1,$2) recent',[tokenHash,user]);
+ if(!r.rows[0].recent)throw Object.assign(Error('Sign in again before deleting data. A verified authentication time within 10 minutes is required. Google sessions without that claim cannot erase data yet.'),{status:403});
 }
 export async function queueErasure(db:PoolClient,tenant:string,user:string,source:string|null,keys:string[]){
  // Serialize receipt creation and completion across every deletion for one account.
@@ -25,12 +25,11 @@ export async function queueErasure(db:PoolClient,tenant:string,user:string,sourc
  return {receipt,status,requestId:id};
 }
 export async function eraseAccount(tenant:string,user:string,tokenHash:string){
- return transaction(tenant,async db=>{
+ return identityTransaction(tenant,async db=>{
   const account=await db.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[user]);if(!account.rowCount)throw Object.assign(Error('Account not found'),{status:404});
   await recentSession(db,user,tokenHash);
   await requireMembership(db,tenant,user,true);
   const workspace=await db.query('SELECT id FROM workspaces WHERE id=$1 AND owner_id=$2 FOR UPDATE',[tenant,user]);if(!workspace.rowCount)throw Object.assign(Error('Workspace not found'),{status:404});
-  await db.query('SELECT tenant_id FROM drafts FOR UPDATE');
   const files=(await db.query("SELECT locator FROM sources WHERE kind='upload'")).rows.map(s=>s.locator);
   const result=await queueErasure(db,tenant,user,null,files);
   await db.query('DELETE FROM sessions WHERE user_id=$1',[user]);

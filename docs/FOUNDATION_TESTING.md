@@ -16,4 +16,6 @@ The checks apply migrations, exercise authentication/tenant/worker/lifecycle beh
 
 The Windows development database remains PostgreSQL 16. Run database unit tests against the isolated stack when the development worker is active: both can otherwise claim the same disposable test jobs. The Linux test stack has no background worker competing for test fixtures.
 
-This is a foundation test baseline, not a production deployment manifest. Separate identity/web/worker privileges, restricted worker procedures, complete membership RLS and additional authentication for Google destructive actions remain required before Phase 1 is complete. Hosting is postponed until all five phases and end-to-end checks are complete.
+This is a foundation test baseline, not a production deployment manifest. Identity and workspace privileges are now separate and exercised by negative-permission tests. Separate worker privileges, restricted worker procedures, complete membership RLS and additional authentication for Google destructive actions remain required before Phase 1 is complete. Hosting is postponed until all five phases and end-to-end checks are complete.
+
+The application requires `IDENTITY_DATABASE_URL` in addition to `DATABASE_URL`. The initializer generates distinct credentials, and migrations create the restricted identity role. Administrative credentials are used only for migrations and disposable test fixtures. Existing local installations must configure that role before restarting with this version. Role grants/revocations execute in a single migration transaction.

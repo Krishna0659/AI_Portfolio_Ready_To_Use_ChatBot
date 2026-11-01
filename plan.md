@@ -1,6 +1,6 @@
 # PortfolioAI working plan
 
-Last updated: 1 November 2026 (Asia/Calcutta).
+Last updated: 2 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
@@ -13,6 +13,8 @@ These are verified local capabilities, not a declaration that any complete produ
 - [x] Tenant isolation on content tables, with real-database isolation tests.
 - [x] Active workspace/membership checks on browser API transactions and session lookup; owner-only mutations and deletion checks. Owner memberships were backfilled for existing workspaces. Local verification now passes 27 tests and all 10 API workflows. Database-role separation remains open.
 - [x] Clean Linux/PostgreSQL 17 container run passed 27 automated tests, 7 parser tests, TypeScript checking, the production build, 10 built-server API workflows and membership API checks. Added a disposable Compose test baseline with pinned images/dependencies. Remote CI verification is pending; this does not close the remaining Phase 1 security gates.
+- [x] GitHub Actions foundation workflow passed for commit `01728d4` ([run](https://github.com/Krishna0659/AI_Portfolio_Ready_To_Use_ChatBot/actions/runs/41334263939)).
+- [x] Separate identity database login configured and verified locally and in the disposable Linux environment. Workspace access cannot read accounts, sessions or login flows or change memberships; identity access cannot read draft content or evidence text. Recent-authentication checks use a restricted boolean function. The Linux suite passed 28 tests, 7 parser tests, build and API checks; local sign-in/logout, lifecycle and Google redirect checks passed. Worker-role separation remains open.
 - [x] Profile draft editor, revision checks, explicit approval, immutable versions, private JSON/Markdown export and restore-to-draft.
 - [x] Single-page website imports, GitHub README imports and DOCX/PDF/TXT/Markdown uploads. Supplied portfolio and résumé were captured as separate evidence.
 - [x] Local-owner GitHub App authorization; fresh PaySure and Text-Summazrizer captures verified. Rate-limit handling and failed-source retries implemented.

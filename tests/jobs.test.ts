@@ -1,10 +1,11 @@
+import {fixturePool} from './fixture-db';
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {pool,transaction} from '../packages/db';
 import {claimJob,heartbeat,completeJob,failJob,retryDecision} from '../packages/domain/jobs';
 import {httpFailure} from '../services/fetch-broker/errors';
-after(()=>pool.end());
+after(()=>Promise.all([pool.end(),fixturePool.end()]));
 test('retry policy backs off transient connections and respects provider waits',()=>{
  const network=new TypeError('fetch failed',{cause:Object.assign(Error('private connection details'),{code:'ECONNRESET'})});
  assert.equal(retryDecision(network,1,0,()=>0.5).retryAt?.getTime(),5000);assert.equal(retryDecision(network,3,0,()=>0.5).retryAt?.getTime(),20000);assert.equal(retryDecision(network,5,0).retryAt,null);
@@ -15,7 +16,7 @@ test('retry policy backs off transient connections and respects provider waits',
 test('job leases renew, recover and reject late success/failure after cancellation or reassignment',async()=>{
  const user=randomUUID(),tenant=randomUUID(),source=randomUUID(),jobId=randomUUID();
  try{
-  await pool.query("INSERT INTO accounts(id,issuer,subject,name) VALUES($1,'jobs-test',$2,'Job fixture')",[user,user]);await pool.query('INSERT INTO workspaces(id,owner_id) VALUES($1,$2)',[tenant,user]);
+  await fixturePool.query("INSERT INTO accounts(id,issuer,subject,name) VALUES($1,'jobs-test',$2,'Job fixture')",[user,user]);await fixturePool.query('INSERT INTO workspaces(id,owner_id) VALUES($1,$2)',[tenant,user]);
   await transaction(tenant,async db=>{await db.query("INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,'web','Job fixture','https://example.com')",[source,tenant]);await db.query('INSERT INTO jobs(id,tenant_id,source_id) VALUES($1,$2,$3)',[jobId,tenant,source]);});
   const old=(await claimJob(tenant,false))!;assert.equal(old.attempt,1);assert.equal(await claimJob(tenant,false),null);
   await transaction(tenant,db=>db.query("UPDATE jobs SET lease_until=now()+interval '1 second' WHERE id=$1",[jobId]));assert.equal(await heartbeat(old),true);
@@ -30,5 +31,5 @@ test('job leases renew, recover and reject late success/failure after cancellati
   await transaction(tenant,db=>db.query("UPDATE jobs SET status='cancelled',lease=NULL WHERE id=$1",[jobId]));assert.equal(await heartbeat(cancelled),false);assert.equal(await completeJob(cancelled,'Cancelled result'),false);assert.equal(await failJob(cancelled,Error('Cancelled failure'),false),false);
   await transaction(tenant,db=>db.query("UPDATE jobs SET status='queued',available_at=now() WHERE id=$1",[jobId]));const valid=(await claimJob(tenant,false))!;assert.equal(await completeJob(valid,'Valid evidence'),true);assert.equal(await completeJob(valid,'Duplicate evidence'),false);
   assert.equal((await transaction(tenant,db=>db.query('SELECT text FROM snapshots WHERE source_id=$1',[source]))).rows[0].text,'Valid evidence');
- }finally{await pool.query('DELETE FROM workspaces WHERE id=$1',[tenant]);await pool.query('DELETE FROM accounts WHERE id=$1',[user]);}
+ }finally{await fixturePool.query('DELETE FROM workspaces WHERE id=$1',[tenant]);await fixturePool.query('DELETE FROM accounts WHERE id=$1',[user]);}
 });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {pool} from '../packages/db';
+import {identityPool as pool} from '../packages/db';
 import {openFlow} from '../packages/domain/oidc-flow';
 let state:string|undefined;
 try{
