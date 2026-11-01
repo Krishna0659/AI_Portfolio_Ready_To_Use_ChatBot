@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.local/
+test-results/
+*.tsbuildinfo
+**/__pycache__/
+docs/screenshots/
+docs/*-check.json
+scripts/diagnose-imports.mjs
+scripts/retry-repository.mjs
+scripts/smoke.mjs
+*.pem
+*.key
