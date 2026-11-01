@@ -12,6 +12,7 @@ This is a functioning local development implementation, not completion of the fu
 - Public GitHub repository README imports via GitHub API; no credential scraping.
 - DOCX/PDF/TXT/Markdown uploads with size limits, random local storage names, bounded Python subprocess parsing, XML entity protections, ZIP expansion and PDF active-content checks.
 - Durable per-source jobs, lease-fenced result commits, expired-lease recovery, cancellation, user-triggered retry and synchronization. Existing draft text is never overwritten by an import.
+- Fifteen-second worker heartbeats extend valid sixty-second leases. Both success and failure commits reject expired/reassigned/cancelled leases. Transient network failures retry with jittered exponential delays, provider waiting periods are honored, and imports stop after five attempts. Each pass handles at most one job per tenant.
 - Source evidence stays distinct until the user adds it to a draft; source identity is never assumed to match profile identity.
 - Structured editable draft, provenance references, optimistic revision checks, immutable approved versions, approval idempotency, deterministic Markdown and canonical SHA-256 hashes.
 - Private authenticated JSON/Markdown exports, version-to-draft restoration, source detachment and source erasure of linked draft facts/history.
@@ -34,7 +35,7 @@ These are implementation gaps, not merely credential or hosting tasks:
 - Separate identity and worker database roles with narrowly scoped security-definer procedures; current worker can enumerate workspace IDs and shares the web runtime role. Global identity tables are not isolated into their specified restricted role.
 - Complete membership-aware RLS, approval/evidence deferred database constraints, profile-bearing composite keys across the full schema, protected append-only audit and dedicated erasure role.
 - Production storage erasure, retention/reconciliation jobs, backup deletion tombstone replay and restoration testing. Local account/object deletion is implemented; external exports and backups remain outside its boundary.
-- Full retry classification/backoff, heartbeats, per-tenant fairness, API quotas and the complete durable KB contract/mock scenarios (timeouts, accepted/polling, generation fences, purge).
+- Production fairness/load guarantees, API quotas and the complete durable KB contract/mock scenarios (timeouts, accepted/polling, generation fences, purge). Local heartbeat, recovery and bounded retry behavior is implemented.
 - Encrypted transient OIDC flow storage, complete negative-provider identity tests and live verification of Google fresh authentication. Local expiry, session replacement and deletion reauthentication checks are implemented.
 - OpenAPI-generated contracts, operational metrics/alerts, dependency/container/secret CI gates, load and fault-injection tests, accessibility audit.
 

@@ -14,7 +14,7 @@ export async function fetchPublic(raw:string,redirects=0):Promise<{body:Buffer;t
  if(res.statusCode!==200){res.resume();return reject(httpFailure(res.statusCode??502,u.hostname,res.headers));}
  if(res.headers['content-encoding']&&res.headers['content-encoding']!=='identity'){res.destroy();return reject(Error('Compressed HTTP responses are not accepted'));}
  let bytes=0;const chunks:Buffer[]=[];res.on('data',(chunk:Buffer)=>{bytes+=chunk.length;if(bytes>2*1024*1024){res.destroy(Error('Page exceeds 2 MB'));return;}chunks.push(chunk);});res.on('error',reject);res.on('end',()=>resolve({body:Buffer.concat(chunks),type:res.headers['content-type']??'',url:u.href}));
- });const timer=setTimeout(()=>req.destroy(Error('Source timed out after 15 seconds')),15000);req.on('close',()=>clearTimeout(timer));req.on('error',reject);});
+ });const timer=setTimeout(()=>req.destroy(Object.assign(Error('Source timed out after 15 seconds'),{code:'ETIMEDOUT'})),15000);req.on('close',()=>clearTimeout(timer));req.on('error',reject);});
 }
 export function githubReadme(raw:string){const u=safeUrl(raw);const match=u.pathname.match(/^\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/?$/);if(u.hostname!=='github.com'||!match||u.search)throw Error('Use a GitHub repository URL, such as https://github.com/owner/repository');return `https://api.github.com/repos/${match[1]}/${match[2]}/readme`;}
 
