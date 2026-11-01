@@ -1,0 +1,32 @@
+name: Foundation checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: foundation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux-foundation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Check tracked files for credential patterns
+        run: node scripts/check-secrets.mjs
+      - name: Audit locked Node dependencies
+        run: npm audit --audit-level=high
+      - name: Prepare disposable configuration
+        run: node scripts/prepare-foundation-test.mjs
+      - name: Verify Linux and PostgreSQL 17
+        run: docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from checks
+      - name: Stop disposable services
+        if: always()
+        run: docker compose -f compose.test.yml down

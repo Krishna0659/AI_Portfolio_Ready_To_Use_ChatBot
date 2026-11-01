@@ -12,6 +12,7 @@ These are verified local capabilities, not a declaration that any complete produ
 - [x] Hashed sessions, CSRF protection, idle/absolute expiry, encrypted temporary login data and validated Google callbacks. Safe error references added; an earlier second-account error did not recur after a fresh attempt, and its original cause remains unconfirmed.
 - [x] Tenant isolation on content tables, with real-database isolation tests.
 - [x] Active workspace/membership checks on browser API transactions and session lookup; owner-only mutations and deletion checks. Owner memberships were backfilled for existing workspaces. Local verification now passes 27 tests and all 10 API workflows. Database-role separation remains open.
+- [x] Clean Linux/PostgreSQL 17 container run passed 27 automated tests, 7 parser tests, TypeScript checking, the production build, 10 built-server API workflows and membership API checks. Added a disposable Compose test baseline with pinned images/dependencies. Remote CI verification is pending; this does not close the remaining Phase 1 security gates.
 - [x] Profile draft editor, revision checks, explicit approval, immutable versions, private JSON/Markdown export and restore-to-draft.
 - [x] Single-page website imports, GitHub README imports and DOCX/PDF/TXT/Markdown uploads. Supplied portfolio and résumé were captured as separate evidence.
 - [x] Local-owner GitHub App authorization; fresh PaySure and Text-Summazrizer captures verified. Rate-limit handling and failed-source retries implemented.

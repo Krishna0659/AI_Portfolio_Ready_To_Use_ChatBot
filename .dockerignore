@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env*
+.local
+docs/screenshots
+*.pem
+*.key
+client_secret_*.json
+*.tsbuildinfo

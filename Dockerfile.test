@@ -1,0 +1,12 @@
+FROM node:24-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY services/extraction/requirements.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/parser && /opt/parser/bin/pip install --no-cache-dir -r /tmp/requirements.txt
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY --chown=node:node . .
+RUN mkdir -p .local/objects && chown node:node /app /app/.local /app/.local/objects
+USER node
+ENV NEXT_TELEMETRY_DISABLED=1
+CMD ["sh", "-c", "npm run db:setup && npm test && npm run check && /opt/parser/bin/python services/extraction/test_parse.py && npm run build && node scripts/check-built-server.mjs"]
