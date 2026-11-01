@@ -5,10 +5,11 @@ import {hash} from '../../packages/contracts/profile';
 import {fetchPublic,githubReadme} from '../../services/fetch-broker/fetch';
 import {SourceHttpError} from '../../services/fetch-broker/errors';
 import {ownerAppEnabled,ownerReadme} from '../../services/github/app';
+import {cleanupOne} from '../../packages/domain/lifecycle';
 import {parse} from '../../services/extraction';
 process.loadEnvFile('.env.local');
 // Worker discovers tenant IDs only; all content operations use the scoped runtime role.
-async function tick(){const tenants=await pool.query('SELECT id FROM workspaces');for(const {id:tenant} of tenants.rows){
+async function tick(){await cleanupOne();const tenants=await pool.query('SELECT id FROM workspaces');for(const {id:tenant} of tenants.rows){
  const job=await transaction(tenant,async db=>{await db.query("UPDATE jobs SET status=CASE WHEN attempt>=5 THEN 'failed' ELSE 'queued' END,error='Worker lease expired',lease=NULL WHERE status='running' AND lease_until<now()");const r=await db.query("SELECT j.*,s.kind,s.locator FROM jobs j JOIN sources s ON s.id=j.source_id AND s.tenant_id=j.tenant_id WHERE j.status='queued' AND j.available_at<=now() AND s.status='active' AND (s.kind<>'github' OR $1::boolean OR NOT EXISTS(SELECT 1 FROM fetch_cooldowns WHERE host='api.github.com' AND retry_at>now())) ORDER BY j.created_at FOR UPDATE OF j SKIP LOCKED LIMIT 1",[ownerAppEnabled(tenant)]);if(!r.rows.length)return null;const job=r.rows[0];job.lease=randomUUID();await db.query("UPDATE jobs SET status='running',attempt=attempt+1,lease=$2,lease_until=now()+interval '60 seconds' WHERE id=$1",[job.id,job.lease]);return job;});
  if(job){try{let body:Buffer,kind:string;
  if(job.kind==='upload'){body=await readFile(`.local/objects/${job.locator}`);kind=job.locator.split('.').pop();}

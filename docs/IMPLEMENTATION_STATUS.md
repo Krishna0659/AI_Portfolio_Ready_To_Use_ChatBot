@@ -15,6 +15,8 @@ This is a functioning local development implementation, not completion of the fu
 - Source evidence stays distinct until the user adds it to a draft; source identity is never assumed to match profile identity.
 - Structured editable draft, provenance references, optimistic revision checks, immutable approved versions, approval idempotency, deterministic Markdown and canonical SHA-256 hashes.
 - Private authenticated JSON/Markdown exports, version-to-draft restoration, source detachment and source erasure of linked draft facts/history.
+- Local account erasure with exact confirmation and authentication within 10 minutes; immediate session revocation and transactional workspace removal. Durable uploaded-object cleanup retries across worker restarts; hashed bearer receipts expose only completion status. Account receipts also wait for earlier source cleanup. Concurrent completions are serialized per account.
+- Transactional sign-in with same-device session replacement, rolling 12-hour idle expiry bounded by seven days, and fresh authentication before source/account erasure.
 - Transactional local delivery events; disabled and minimal mock modes explicitly distinguished from live indexing.
 - Widget appearance preferences and non-conversational preview.
 - Workspace light/dark/system theme, immediate preview and persisted settings; system preference follows OS changes.
@@ -31,9 +33,9 @@ These are implementation gaps, not merely credential or hosting tasks:
 - Independent OS/container enforcement of parser networking/filesystem limits, malware scanning, private immutable object-storage upload protocol and storage quotas. Local Python socket blocking is not a security sandbox.
 - Separate identity and worker database roles with narrowly scoped security-definer procedures; current worker can enumerate workspace IDs and shares the web runtime role. Global identity tables are not isolated into their specified restricted role.
 - Complete membership-aware RLS, approval/evidence deferred database constraints, profile-bearing composite keys across the full schema, protected append-only audit and dedicated erasure role.
-- Full account erasure, object-purge outbox, retention/reconciliation jobs, backup deletion tombstones and restoration testing. Local source erasure is not a substitute for the full lifecycle design.
+- Production storage erasure, retention/reconciliation jobs, backup deletion tombstone replay and restoration testing. Local account/object deletion is implemented; external exports and backups remain outside its boundary.
 - Full retry classification/backoff, heartbeats, per-tenant fairness, API quotas and the complete durable KB contract/mock scenarios (timeouts, accepted/polling, generation fences, purge).
-- Recent reauthentication, idle/absolute session rotation lifecycle, encrypted transient OIDC flow storage, complete negative-provider identity tests.
+- Encrypted transient OIDC flow storage, complete negative-provider identity tests and live verification of Google fresh authentication. Local expiry, session replacement and deletion reauthentication checks are implemented.
 - OpenAPI-generated contracts, operational metrics/alerts, dependency/container/secret CI gates, load and fault-injection tests, accessibility audit.
 
 ## Environment and verification boundaries
