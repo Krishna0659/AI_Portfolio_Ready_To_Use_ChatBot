@@ -41,6 +41,8 @@ Restart `npm run worker` after editing environment values. Select a repository i
 
 ## Verification limit
 
-Tests cover signing, token scope, installation mismatch/suspension and endpoint restrictions with synthetic keys and mocked responses. Live configuration/import testing requires your GitHub App. Authenticated requests have separate quotas; authentication does not mean unlimited syncing.
+Tests cover signing, token scope, installation mismatch/suspension and endpoint restrictions with synthetic keys and mocked responses. Live imports were verified on the configured local installation on 1 November 2026: PaySure and Text-Summazrizer both produced new evidence through the authenticated worker. Authenticated requests have separate quotas; authentication does not mean unlimited syncing.
+
+To repeat the end-to-end check, run `npx tsx scripts/verify-github-sync.ts` with the app and worker running. It cancels existing in-flight imports for the local owner's active GitHub sources, queues fresh imports through the normal API, and checks that new jobs produced new snapshots. It does not modify drafts or approved versions. It saves only counts and status metadata under ignored `.local/github-live-verification.json`, never credentials or evidence text.
 
 Official references: [installation authentication](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-an-installation), [repository permissions](https://docs.github.com/en/apps/creating-github-apps/setting-up-a-github-app/choosing-permissions-for-a-github-app).
