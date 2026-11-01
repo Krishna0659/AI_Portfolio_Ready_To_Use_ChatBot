@@ -6,7 +6,7 @@ This is a functioning local development implementation, not completion of the fu
 
 - Next.js App Router, React, TypeScript; locally served IBM Plex Sans and responsive dense dashboard.
 - PostgreSQL persistence, a separate non-owner runtime role, forced tenant RLS on content tables, tenant-bearing foreign keys, transaction-local context.
-- Google OIDC authorization code + PKCE/state/nonce flow; opaque hashed sessions and CSRF-protected mutations. Google credentials are not supplied and the real provider flow is not verified.
+- Google OIDC authorization code + PKCE/state/nonce flow; opaque hashed sessions and CSRF-protected mutations. Transient verifier/nonce payloads use AES-256-GCM encryption bound to state. ID-token signatures, issuer, audience, expiry and nonce are checked. Two Google accounts successfully signed in interactively on 1 November 2026; configuration and session creation were verified. An earlier generic failure for the second account did not recur on a fresh attempt; its cause is unconfirmed. Safe stage/error references now support diagnosis.
 - Explicit loopback development login; binds Next.js to 127.0.0.1. Never expose this development setup publicly.
 - Website single-page HTML/text extraction with public HTTPS-only validation, DNS address checks/pinning, redirect validation, time and byte bounds.
 - Public GitHub repository README imports via GitHub API; no credential scraping.
@@ -36,7 +36,7 @@ These are implementation gaps, not merely credential or hosting tasks:
 - Complete membership-aware RLS, approval/evidence deferred database constraints, profile-bearing composite keys across the full schema, protected append-only audit and dedicated erasure role.
 - Production storage erasure, retention/reconciliation jobs, backup deletion tombstone replay and restoration testing. Local account/object deletion is implemented; external exports and backups remain outside its boundary.
 - Production fairness/load guarantees, API quotas and the complete durable KB contract/mock scenarios (timeouts, accepted/polling, generation fences, purge). Local heartbeat, recovery and bounded retry behavior is implemented.
-- Encrypted transient OIDC flow storage, complete negative-provider identity tests and live verification of Google fresh authentication. Local expiry, session replacement and deletion reauthentication checks are implemented.
+- Google-account deletion step-up: Google does not support forced reauthentication and authentication-time claims require enabled security-bundle features. The tested sessions have no such claim, so Google source/account erasure fails closed. Normal sign-in works. Local-development reauthentication works; negative token/callback and encrypted-flow tests pass, but the full provider fault matrix remains open.
 - OpenAPI-generated contracts, operational metrics/alerts, dependency/container/secret CI gates, load and fault-injection tests, accessibility audit.
 
 ## Environment and verification boundaries

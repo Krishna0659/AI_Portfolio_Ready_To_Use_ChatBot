@@ -29,7 +29,9 @@ For a fresh machine: install Node LTS, PostgreSQL and Python; `npm ci`; adapt `s
 
 ## Google sign-in
 
-Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local` using your own Google OAuth app. Register `http://localhost:3000/api/auth/callback` for local testing. Keep `APP_ORIGIN` exactly `http://localhost:3000`, and use that hostname in the browser. Disable `LOCAL_DEVELOPMENT_LOGIN` before any non-local environment. Real provider sign-in is unverified until credentials are available.
+Google sign-in is configured and was verified interactively with two accounts on 1 November 2026. Each identity has a separate workspace; the supplied references remain in the local development workspace. See [Google setup and verification](docs/GOOGLE_SIGN_IN.md).
+
+For another installation, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and a random 32-byte hex `OIDC_FLOW_KEY` in `.env.local`. The local initializer generates the encryption key. Register `http://localhost:3000/api/auth/callback` and keep `APP_ORIGIN` exactly `http://localhost:3000`. Development remains loopback-only.
 
 ## Checks
 
@@ -45,4 +47,4 @@ API/browser checks need the web/database processes. Browser check uses installed
 
 ## Privacy
 
-No LLM, embeddings, public hosting or chat runtime. Imported content lives in local PostgreSQL and `.local/objects`. Exported files leave the app's deletion boundary. Source erasure removes all versions linked to that source, not just the current version. Full account purge, retention, malware scanning and production isolation remain open in the implementation status.
+No LLM, embeddings, public hosting or chat runtime. Imported content lives in local PostgreSQL and `.local/objects`. Exported files leave the app's deletion boundary. Source erasure removes all versions linked to that source, not just the current version. Local account erasure includes durable file cleanup and requires verified recent authentication. Google sessions without a recent provider authentication-time claim cannot erase data. Production retention, backups, malware scanning and isolation remain open in the implementation status.

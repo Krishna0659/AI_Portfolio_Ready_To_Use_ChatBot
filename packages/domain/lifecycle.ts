@@ -10,8 +10,8 @@ export function objectPath(key:string){
  return path.resolve('.local/objects',key);
 }
 export async function recentSession(db:PoolClient,user:string,tokenHash:string){
- const r=await db.query("SELECT token_hash FROM sessions WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND absolute_expires_at>now() AND created_at>now()-interval '10 minutes'",[tokenHash,user]);
- if(!r.rowCount)throw Object.assign(Error('Sign in again before deleting data. Recent authentication is required.'),{status:403});
+ const r=await db.query("SELECT token_hash FROM sessions WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND absolute_expires_at>now() AND created_at>now()-interval '10 minutes' AND authenticated_at>now()-interval '10 minutes' AND authenticated_at<=now()+interval '1 minute'",[tokenHash,user]);
+ if(!r.rowCount)throw Object.assign(Error('Sign in again before deleting data. A verified authentication time within 10 minutes is required. Google sessions without that claim cannot erase data yet.'),{status:403});
 }
 export async function queueErasure(db:PoolClient,tenant:string,user:string,source:string|null,keys:string[]){
  // Serialize receipt creation and completion across every deletion for one account.

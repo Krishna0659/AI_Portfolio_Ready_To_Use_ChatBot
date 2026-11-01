@@ -13,3 +13,4 @@ scripts/retry-repository.mjs
 scripts/smoke.mjs
 *.pem
 *.key
+client_secret_*.json

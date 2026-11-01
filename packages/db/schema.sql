@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS auth_flows(state text PRIMARY KEY, verifier text NOT 
 CREATE TABLE IF NOT EXISTS fetch_cooldowns(host text PRIMARY KEY,retry_at timestamptz NOT NULL);
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS absolute_expires_at timestamptz NOT NULL DEFAULT now()+interval '7 days';
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS last_seen_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS authenticated_at timestamptz;
 CREATE TABLE IF NOT EXISTS deletion_requests(id uuid PRIMARY KEY,receipt_hash text UNIQUE NOT NULL,tenant_id uuid NOT NULL,user_id uuid NOT NULL,source_id uuid,scope text NOT NULL CHECK(scope IN ('source','account')),status text NOT NULL CHECK(status IN ('pending','completed')),created_at timestamptz NOT NULL DEFAULT now(),completed_at timestamptz);
 CREATE TABLE IF NOT EXISTS object_deletions(id uuid PRIMARY KEY,request_id uuid NOT NULL REFERENCES deletion_requests,object_key text UNIQUE NOT NULL CHECK(object_key ~ '^[0-9a-f-]{36}\.(docx|pdf|txt|md)$'),attempt integer NOT NULL DEFAULT 0,available_at timestamptz NOT NULL DEFAULT now(),lease uuid,lease_until timestamptz,last_error text);
 CREATE INDEX IF NOT EXISTS pending_object_cleanup ON object_deletions(available_at);

@@ -18,6 +18,10 @@ test('account erasure is fenced, revokes sessions, and waits for durable source 
  await mkdir('.local/objects',{recursive:true});await writeFile(objectPath(key),'Disposable lifecycle fixture');
  await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);assert.equal((await pool.query('SELECT id FROM accounts WHERE id=$1',[user])).rowCount,1);
  await pool.query('UPDATE sessions SET created_at=now() WHERE token_hash=$1',[tokenHash]);
+ await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);
+ await pool.query("UPDATE sessions SET authenticated_at=now()-interval '11 minutes' WHERE token_hash=$1",[tokenHash]);
+ await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);
+ await pool.query('UPDATE sessions SET authenticated_at=now() WHERE token_hash=$1',[tokenHash]);
  await assert.rejects(eraseAccount(randomUUID(),user,tokenHash),/Workspace not found/);
  const pending=await transaction(tenant,async db=>{const receipt=await queueErasure(db,tenant,user,source,[key]);await db.query('DELETE FROM sources WHERE id=$1',[source]);return receipt;});requestId=pending.requestId;
  assert.equal((await deletionStatus(pending.receipt))?.status,'pending');assert.equal(await deletionStatus('not-a-receipt'),null);
