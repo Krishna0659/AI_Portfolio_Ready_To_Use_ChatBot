@@ -5,7 +5,7 @@ import {z} from 'zod';
 import {cookies} from 'next/headers';
 import {eraseAccount,queueErasure,recentSession} from '../../../../packages/domain/lifecycle';
 import {session,mutation,cookieName} from '../../../../packages/domain/auth';
-import {transaction} from '../../../../packages/db';
+import {authorizedTransaction} from '../../../../packages/domain/authorization';
 import {profileSchema,emptyProfile,hash,markdown,Profile} from '../../../../packages/contracts/profile';
 import {safeUrl,githubReadme} from '../../../../services/fetch-broker/fetch';
 export const runtime='nodejs';
@@ -14,7 +14,7 @@ async function body(req:Request){const reader=req.body?.getReader();if(!reader)r
 type Context={params:Promise<{path:string[]}>};
 async function handler(req:Request,ctx:Context){try{const s=await session();if(!s)return NextResponse.json({error:'Sign in to continue'},{status:401});const route=(await ctx.params).path.join('/'),tenant=s.tenant_id;
  if(req.method!=='GET')mutation(req,s);
- if(req.method==='GET')return await transaction(tenant,async db=>{
+ if(req.method==='GET')return await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{
  if(route==='workspace'){const draft=(await db.query('SELECT * FROM drafts')).rows[0];const sources=(await db.query('SELECT s.*, (SELECT row_to_json(j) FROM jobs j WHERE j.source_id=s.id ORDER BY created_at DESC LIMIT 1) job FROM sources s ORDER BY consented_at DESC')).rows;const snapshots=(await db.query('SELECT * FROM snapshots ORDER BY created_at DESC')).rows;const versions=(await db.query('SELECT * FROM versions ORDER BY number DESC')).rows;const events=(await db.query('SELECT * FROM events ORDER BY generation DESC')).rows;const audit=(await db.query('SELECT * FROM audit ORDER BY created_at DESC LIMIT 30')).rows;return NextResponse.json({csrf:s.csrf,name:s.name,draft,sources,snapshots,versions,events,audit,local:s.issuer==='local-development'});}
  const exportMatch=route.match(/^versions\/([\w-]+)\/export$/);if(exportMatch){const version=(await db.query('SELECT * FROM versions WHERE id=$1',[z.uuid().parse(exportMatch[1])])).rows[0];if(!version)fail('Version not found',404);const isMd=new URL(req.url).searchParams.get('format')==='markdown';return new Response(isMd?version.markdown:JSON.stringify(version.content,null,2),{headers:{'Content-Type':isMd?'text/markdown; charset=utf-8':'application/json','Content-Disposition':`attachment; filename="profile-v${version.number}.${isMd?'md':'json'}"`,'Cache-Control':'no-store'}});}
  return NextResponse.json({error:'Not found'},{status:404});});
@@ -25,10 +25,10 @@ async function handler(req:Request,ctx:Context){try{const s=await session();if(!
  const form=await new Response(Buffer.concat(chunks),{headers:{'Content-Type':req.headers.get('content-type')??''}}).formData();const file=form.get('file');if(!(file instanceof File)||form.get('consent')!=='true')fail('Choose a file and confirm import consent');
  const upload=file as File;const ext=upload.name.split('.').pop()?.toLowerCase();if(!['docx','pdf','txt','md'].includes(ext??'')||upload.size<1||upload.size>10485760)fail('Use a DOCX, PDF, TXT or Markdown file up to 10 MB');
  const locator=`${randomUUID()}.${ext}`,id=randomUUID();await mkdir('.local/objects',{recursive:true});await writeFile(`.local/objects/${locator}`,Buffer.from(await upload.arrayBuffer()),{flag:'wx'});
- try{await transaction(tenant,async db=>{await db.query('SELECT tenant_id FROM drafts FOR UPDATE');const count=Number((await db.query('SELECT count(*) FROM sources')).rows[0].count);if(count>=10)fail('Maximum 10 sources per workspace');await db.query('INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,\'upload\',$3,$4)',[id,tenant,upload.name.slice(0,200),locator]);await db.query('INSERT INTO jobs(id,tenant_id,source_id) VALUES($1,$2,$3)',[randomUUID(),tenant,id]);});}catch(e){await unlink(`.local/objects/${locator}`).catch(()=>{});throw e;}return NextResponse.json({id});}
+ try{await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{await db.query('SELECT tenant_id FROM drafts FOR UPDATE');const count=Number((await db.query('SELECT count(*) FROM sources')).rows[0].count);if(count>=10)fail('Maximum 10 sources per workspace');await db.query('INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,\'upload\',$3,$4)',[id,tenant,upload.name.slice(0,200),locator]);await db.query('INSERT INTO jobs(id,tenant_id,source_id) VALUES($1,$2,$3)',[randomUUID(),tenant,id]);});}catch(e){await unlink(`.local/objects/${locator}`).catch(()=>{});throw e;}return NextResponse.json({id});}
  const data=await body(req);
  if(route==='account/erase'){z.object({confirm:z.literal('DELETE MY ACCOUNT')}).strict().parse(data);const result=await eraseAccount(tenant,s.user_id,s.token_hash);(await cookies()).delete(cookieName);return NextResponse.json(result,{status:202});}
- return await transaction(tenant,async db=>{
+ return await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{
  const draft=(await db.query('SELECT * FROM drafts FOR UPDATE')).rows[0];if(!draft)fail('Workspace unavailable',404);
  const audit=async(action:string)=>db.query('INSERT INTO audit(id,tenant_id,action) VALUES($1,$2,$3)',[randomUUID(),tenant,action]);
  if(route==='sources'){

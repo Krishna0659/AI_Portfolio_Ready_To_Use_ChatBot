@@ -3,6 +3,7 @@ import {unlink,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import type {PoolClient} from 'pg';
 import {pool,transaction} from '../db';
+import {requireMembership} from './authorization';
 
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
 export function objectPath(key:string){
@@ -27,6 +28,7 @@ export async function eraseAccount(tenant:string,user:string,tokenHash:string){
  return transaction(tenant,async db=>{
   const account=await db.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[user]);if(!account.rowCount)throw Object.assign(Error('Account not found'),{status:404});
   await recentSession(db,user,tokenHash);
+  await requireMembership(db,tenant,user,true);
   const workspace=await db.query('SELECT id FROM workspaces WHERE id=$1 AND owner_id=$2 FOR UPDATE',[tenant,user]);if(!workspace.rowCount)throw Object.assign(Error('Workspace not found'),{status:404});
   await db.query('SELECT tenant_id FROM drafts FOR UPDATE');
   const files=(await db.query("SELECT locator FROM sources WHERE kind='upload'")).rows.map(s=>s.locator);
