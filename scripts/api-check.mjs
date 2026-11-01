@@ -1,0 +1,25 @@
+import pg from 'pg';
+import {randomUUID,randomBytes,createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+process.loadEnvFile('.env.local');const db=new pg.Client({connectionString:process.env.DATABASE_URL});await db.connect();
+const user=randomUUID(),tenant=randomUUID(),csrf=randomBytes(32).toString('hex'),token=randomBytes(32).toString('hex');
+const checks=[];const empty={schemaVersion:1,displayName:'',headline:'',sections:[]};
+try{
+await db.query("INSERT INTO accounts(id,issuer,subject,name) VALUES($1,'test',$2,'Automated test')",[user,user]);await db.query('INSERT INTO workspaces(id,owner_id) VALUES($1,$2)',[tenant,user]);await db.query("SELECT set_config('app.tenant_id',$1,false)",[tenant]);await db.query('INSERT INTO drafts(tenant_id,content) VALUES($1,$2)',[tenant,empty]);await db.query('INSERT INTO sessions(token_hash,user_id,csrf) VALUES($1,$2,$3)',[createHash('sha256').update(token).digest('hex'),user,csrf]);
+const headers={origin:'http://localhost:3000',cookie:`portfolio_local_session=${token}`,'x-csrf-token':csrf,'content-type':'application/json'};
+async function req(path,data,extra={}){return fetch('http://localhost:3000/api/v1/'+path,{method:data===undefined?'GET':'POST',headers:{...headers,...extra},body:data===undefined?undefined:JSON.stringify(data)});}
+let r=await req('workspace');assert.equal(r.status,200);let w=await r.json();assert.equal(w.sources.length,0);checks.push('Second workspace cannot see supplied imports');
+r=await req('draft',{revision:1,content:empty},{'x-csrf-token':'wrong'});assert.equal(r.status,403);checks.push('CSRF rejection');
+const content={schemaVersion:1,displayName:'Integration fixture',headline:'Test only',sections:[{id:randomUUID(),title:'Experience',facts:[{id:randomUUID(),text:'A user-authored test fact',sourceId:null,snapshotId:null}]}]};
+r=await req('draft',{revision:1,content});assert.equal(r.status,200);r=await req('draft',{revision:1,content});assert.equal(r.status,409);checks.push('Stale draft edits rejected');
+r=await req('approve',{revision:1,reviewed:true,publish:false,partialAcknowledged:true},{'idempotency-key':randomUUID()});assert.equal(r.status,409);checks.push('Stale approval rejected');
+const key=randomUUID(),approval={revision:2,reviewed:true,publish:true,partialAcknowledged:true};r=await req('approve',approval,{'idempotency-key':key});assert.equal(r.status,200);const version=await r.json();r=await req('approve',approval,{'idempotency-key':key});assert.deepEqual(await r.json(),version);checks.push('Approval replay is idempotent');
+r=await req(`versions/${version.id}/export?format=json`);assert.equal(r.status,200);assert.deepEqual(await r.json(),content);r=await req(`versions/${version.id}/export?format=markdown`);assert.ok((await r.text()).includes('Integration fixture'));checks.push('Approved JSON and Markdown export');
+await assert.rejects(db.query("UPDATE versions SET content='{}' WHERE id=$1",[version.id]));checks.push('Approved version update denied');
+r=await req('restore',{id:version.id});assert.equal(r.status,200);checks.push('Version restore creates reviewable draft');
+r=await req(`sources/${randomUUID()}/erase`,{confirm:'ERASE'});assert.equal(r.status,404);checks.push('Foreign/absent source hidden');
+const sid=randomUUID(),jid=randomUUID(),snap=randomUUID();await db.query("INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,'web','Erasure fixture','https://example.com')",[sid,tenant]);await db.query("INSERT INTO jobs(id,tenant_id,source_id,status) VALUES($1,$2,$3,'succeeded')",[jid,tenant,sid]);await db.query('INSERT INTO snapshots(id,tenant_id,source_id,job_id,text,content_hash) VALUES($1,$2,$3,$4,$5,$6)',[snap,tenant,sid,jid,'Synthetic evidence for erasure','fixture']);
+w=await (await req('workspace')).json();const sourced={...content,sections:[{id:randomUUID(),title:'Source-linked',facts:[{id:randomUUID(),text:'Synthetic evidence for erasure',sourceId:sid,snapshotId:snap}]}]};r=await req('draft',{revision:w.draft.revision,content:sourced});assert.equal(r.status,200);w=await (await req('workspace')).json();r=await req('approve',{revision:w.draft.revision,reviewed:true,publish:false,partialAcknowledged:true},{'idempotency-key':randomUUID()});assert.equal(r.status,200);const linked=await r.json();r=await req(`sources/${sid}/erase`,{confirm:'ERASE'});assert.equal(r.status,200);w=await (await req('workspace')).json();assert.ok(!w.versions.some(v=>v.id===linked.id));assert.equal(w.draft.content.sections[0].facts.length,0);assert.equal(w.snapshots.length,0);assert.equal(w.draft.current_version,null);checks.push('Erasure removes linked draft facts, snapshots and entire affected versions');
+await writeFile('docs/api-check.json',JSON.stringify({checks},null,2));console.log(checks.join('\n'));
+}finally{await db.query('DELETE FROM sessions WHERE user_id=$1',[user]);await db.query('DELETE FROM workspaces WHERE id=$1',[tenant]);await db.query('DELETE FROM accounts WHERE id=$1',[user]);await db.end();}

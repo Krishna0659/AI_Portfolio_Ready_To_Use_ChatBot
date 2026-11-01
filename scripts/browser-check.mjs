@@ -1,0 +1,11 @@
+import {chromium} from '@playwright/test';
+import {mkdir,writeFile} from 'node:fs/promises';
+const browser=await chromium.launch({channel:'msedge',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://localhost:3000');await page.getByRole('button',{name:'Open local development workspace'}).click();await page.getByRole('heading',{name:'Profile workspace'}).waitFor();await page.evaluate(()=>document.fonts.ready);
+await mkdir('docs/screenshots',{recursive:true});await page.screenshot({path:'docs/screenshots/desktop.png',fullPage:true});
+await page.getByRole('button',{name:'Sources',exact:false}).first().click();await page.getByRole('button',{name:/Resume.docx/}).click();await page.screenshot({path:'docs/screenshots/sources.png',fullPage:true});
+await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Overview',exact:true}).click();await page.screenshot({path:'docs/screenshots/mobile.png',fullPage:true});
+const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);if(overflow)errors.push('Mobile horizontal overflow');
+await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Sign out',exact:true}).last().waitFor({state:'visible'});await page.screenshot({path:'docs/screenshots/mobile-settings.png',fullPage:true});
+await writeFile('docs/browser-check.json',JSON.stringify({errors,mobileOverflow:overflow},null,2));await browser.close();console.log(JSON.stringify({errors,mobileOverflow:overflow}));if(errors.length)process.exitCode=1;
