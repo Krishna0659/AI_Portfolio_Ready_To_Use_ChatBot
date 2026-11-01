@@ -20,6 +20,7 @@ This is a functioning local development implementation, not completion of the fu
 - Workspace light/dark/system theme, immediate preview and persisted settings; system preference follows OS changes.
 - Public GitHub rate-limit classification with persisted shared-host cooldown, automatic bounded retry, explicit waiting time, and reusing failed source records rather than rejecting duplicates.
 - Source evidence comparison between the two latest successful captures (added/removed lines). This is not full three-way profile conflict resolution; drafts remain untouched.
+- Owner-operated local GitHub App installation client: workspace binding, installation matching, repository-scoped read-only tokens, bounded fixed-host requests. Synthetic tests pass; live verification awaits the user's GitHub App credentials. Multi-user installation authorization and webhooks below remain open.
 
 ## Required before calling the full Phase 1 specification complete
 
