@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {generateKeyPairSync,createVerify} from 'node:crypto';
+import {appJwt,appReadme,githubRequest,ownerAppEnabled} from '../services/github/app';
+const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});
+const config={appId:'42',installationId:'123',privateKey:privateKey.export({type:'pkcs8',format:'pem'}).toString()};
+test('app JWT is signed and has bounded lifetime',()=>{const jwt=appJwt(config,1700000000000);const [h,p,s]=jwt.split('.');const claims=JSON.parse(Buffer.from(p,'base64url').toString());assert.equal(claims.iss,'42');assert.equal(claims.exp-claims.iat,600);assert.equal(createVerify('RSA-SHA256').update(h+'.'+p).verify(publicKey,Buffer.from(s,'base64url')),true);});
+test('installation token is read-only and limited to selected repository',async()=>{const calls:unknown[]=[];const result=await appReadme('https://github.com/owner/repo',config,async(path,credential,body)=>{calls.push({path,body});if(path.endsWith('/installation'))return {id:123};if(path.endsWith('/access_tokens'))return {token:'synthetic-test-token',expires_at:new Date(Date.now()+3600000).toISOString()};assert.equal(credential,'synthetic-test-token');return {encoding:'base64',size:5,content:Buffer.from('hello').toString('base64')};});assert.equal(result.toString(),'hello');assert.deepEqual(calls[1],{path:'/app/installations/123/access_tokens',body:{repositories:['repo'],permissions:{contents:'read'}}});});
+test('foreign or suspended installation cannot mint a token',async()=>{for(const result of [{id:456},{id:123,suspended_at:'2026-01-01'}]){let calls=0;await assert.rejects(appReadme('https://github.com/owner/repo',config,async()=>{calls++;return result;}));assert.equal(calls,1);}});
+test('authenticated transport rejects arbitrary endpoints before sending credentials',async()=>{await assert.rejects(githubRequest('//evil.example/readme','synthetic-test-token'));assert.equal(ownerAppEnabled('unbound-workspace'),false);});
