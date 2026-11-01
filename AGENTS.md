@@ -1,3 +1,7 @@
+# Working plan maintenance
+
+Read `plan.md` before continuing project work. Update its two sections after each completed work batch with verified results and remaining tasks. Hosting stays paused throughout every phase; hosting setup and deployment happen only after all website phases are complete and the website works end to end. Do not treat an intermediate phase as deployment authorization.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

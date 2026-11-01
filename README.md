@@ -1,6 +1,6 @@
 # PortfolioAI — local Phase 1 workspace
 
-Working local source imports and profile review. **Read [implementation status](docs/IMPLEMENTATION_STATUS.md) before treating this as a completed production Phase 1.** Hosting is paused.
+Working local source imports and profile review. **Read [implementation status](docs/IMPLEMENTATION_STATUS.md) before treating this as a completed production Phase 1.** Follow [the working plan](plan.md): hosting is paused throughout every phase and happens only after all website phases are complete and the website passes end-to-end checks.
 
 ## Open
 
