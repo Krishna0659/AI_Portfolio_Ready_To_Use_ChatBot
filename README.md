@@ -1,6 +1,6 @@
 # PortfolioAI — local Phase 1 workspace
 
-Working local source imports and profile review. **Read [implementation status](docs/IMPLEMENTATION_STATUS.md) before treating this as a completed production Phase 1.** Follow [the working plan](plan.md): hosting is paused throughout every phase and happens only after all website phases are complete and the website passes end-to-end checks.
+Working local source imports and profile review. **Read [implementation status](docs/IMPLEMENTATION_STATUS.md) before treating this as a completed production Phase 1.** Follow [the working plan](plan.md): hosting is paused throughout every phase and happens only after all website phases are complete and the website passes end-to-end checks. The current workspace is intended for local verification.
 
 ## Open
 
@@ -12,6 +12,8 @@ Visit http://localhost:3000 and choose **Open local development workspace**. The
 4. Versions → download JSON or Markdown. Restore creates a draft requiring another approval.
 
 Settings → Theme changes the whole workspace immediately; **Save settings** persists the choice. System follows your operating-system preference. Failed imports can be retried on their existing source; quota-limited GitHub imports display a waiting time and retry automatically. When multiple successful captures exist, Source evidence shows an expandable added/removed-line comparison.
+
+The web process and import worker should stay running together during local use so queued imports and file cleanup can finish.
 
 ## Run on this Windows workspace
 
@@ -26,6 +28,8 @@ npm run worker
 `npm run worker` must run in a second terminal while the web process runs. If PostgreSQL is already running, do not start another instance.
 
 For a fresh machine: install Node LTS, PostgreSQL and Python; `npm ci`; adapt `scripts/local-init.mjs` paths; run it; install `services/extraction/requirements.txt` into `.local/python-packages`; `npm run db:setup`. Configuration is local and ignored by Git. The initializer will not overwrite existing configuration.
+
+The disposable Linux baseline is documented in [Foundation testing](docs/FOUNDATION_TESTING.md); it does not use the local database or imported sources.
 
 ## Google sign-in
 
