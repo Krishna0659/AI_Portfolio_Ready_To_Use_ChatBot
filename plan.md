@@ -4,6 +4,8 @@ Last updated: 9 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Integrated the user-supplied Canyon404 artwork as a reusable `components/errors/canyon404.tsx` component and root Next.js `app/not-found.tsx` page. Added `lib/utils.ts` (`cn`), scoped CSS, local Pridi font, reduced-motion support and a working home link. Unknown page URLs return HTTP 404 with noindex; API routes retain their own response contracts. Build and browser checks cover desktop/mobile, keyboard access, motion preferences and no-JavaScript recovery.
+
 - [x] Resumed from `C:\Users\gaur5\OneDrive\Attachments\AI_Portfolio_Chatbot`. Reinstalled locked dependencies and copied the stopped database, uploaded objects and prior verification logs from the old workspace. PostgreSQL recovered successfully and now runs from the new directory; the original copy is preserved.
 - [x] On 9 November, applied migrations and passed all 29 local automated tests before starting the worker. Production build, 10 API workflows, membership checks, 7 lifecycle checks and 7 interface regressions passed; no browser console errors. Fresh restricted-worker imports succeeded for PaySure and Text-Summazrizer; Google discovery/redirect checks passed (interactive sign-in was not repeated).
 - [x] Worker access now requires its own configured database login, with no fallback to the web login. The live GitHub verification helper uses the restricted identity connection for identity lookup. Local app and worker are running from the new directory.
@@ -38,6 +40,8 @@ These are verified local capabilities, not a declaration that any complete produ
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+- **User experience additions (9 November):** Build a beautiful public landing page using the user's upcoming supplied components, followed by Google login and the private dashboard. Show a dismissible help prompt on every dashboard visit with a guided Sources → Review → Approve → Export walkthrough and a permanent Help/Take a tour control. These are planned, not implemented. Integrate supplied components into the existing stack with reusable components/utilities and scoped styling. Whenever the user asks “What has been done till now”, refresh this two-section progress record with verified results.
 
 **Hosting decision — updated by the user on 1 November 2026:** Hosting is paused for every phase. Do not deploy or set up public hosting during intermediate phases. Finish all website phases, verify the complete website works end to end, and only then perform hosting setup and deployment as the final step. Local development and testing continue throughout.
 

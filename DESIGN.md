@@ -97,6 +97,10 @@ components:
 
 ## Overview
 
+### User-supplied canyon error page
+
+The standalone 404 surface intentionally preserves the user's canyon/cactus SVG design. It uses locally hosted Pridi 600 for a fluid 44–72px title and a decorative 660-unit SVG error code, hidden from assistive technology; the semantic heading includes the code. Its scoped dark palette is #111827, #1f2937, #374151, #4b5563 and #6b7280, with cyan artwork #0e7490/#155e75. Readable copy uses #d0d9e5, links/focus #67e8f9, border #438493, hover #1b3341/#cffafe. These are intentional exceptions for the supplied artwork, not dashboard token replacements. Pointer parallax respects reduced motion and is disabled for coarse pointers. No remote font requests or global body overrides are introduced.
+
 **Creative North Star: "The Framed Sheet"**
 
 PortfolioAI places a dense, practical workspace inside a pale blue-gray frame. A flat white working sheet, compact navigation, restrained typography and divided source rows keep evidence and editing actions easy to inspect. The outlined P mark is the only brand illustration.
