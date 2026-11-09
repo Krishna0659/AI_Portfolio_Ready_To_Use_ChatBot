@@ -4,6 +4,10 @@ Last updated: 9 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Latest implementation commits pushed: `5b473d3` (worker permissions, membership isolation and verified local rollout) and `e64429e` (reusable Canyon404 page, utilities and onboarding plan). The 404 checks passed at 1440px, 390px and 320px, including HTTP status, noindex, keyboard navigation, reduced motion, home navigation and no-JavaScript fallback. The mobile artwork was adjusted to show the full error code. Framer Motion, clsx, tailwind-merge and the locally served Pridi font are installed.
+- [x] Read the public homepage HTML of the user's landing-page reference, [Emotion Agency](https://emotion-agency.com/?ref=refs.gallery). Confirmed Nuxt assets, PP Neue Montreal Medium and IBM Plex Mono Medium font files, WebP project images, muted looping MP4 previews, Vercel image-optimization URLs, and Basis transcoder/WebAssembly assets. These establish source-level facts only; the animation/3D library and visual behavior have not been verified.
+- [x] Recorded the browser-access discrepancy: the user's screenshot shows **Local browser use: On**, but repeated browser-tool calls report it disabled. The cause is unconfirmed. Full-site navigation, motion, hover effects, transitions, responsive behavior and visual theme analysis remain incomplete; do not describe this as a finished reference-site audit or ask the user to enable an already-enabled setting again.
+
 - [x] Integrated the user-supplied Canyon404 artwork as a reusable `components/errors/canyon404.tsx` component and root Next.js `app/not-found.tsx` page. Added `lib/utils.ts` (`cn`), scoped CSS, local Pridi font, reduced-motion support and a working home link. Unknown page URLs return HTTP 404 with noindex; API routes retain their own response contracts. Build and browser checks cover desktop/mobile, keyboard access, motion preferences and no-JavaScript recovery.
 
 - [x] Resumed from `C:\Users\gaur5\OneDrive\Attachments\AI_Portfolio_Chatbot`. Reinstalled locked dependencies and copied the stopped database, uploaded objects and prior verification logs from the old workspace. PostgreSQL recovered successfully and now runs from the new directory; the original copy is preserved.
@@ -40,6 +44,8 @@ These are verified local capabilities, not a declaration that any complete produ
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+- **Landing-page reference investigation:** The user wants the landing page to closely match Emotion Agency's visual and motion experience. Once browser access works, inspect the entire public site, including navigation/menu states, scroll sequences, hover behavior, page transitions, imagery/video, typography, colors and mobile layouts. Produce an evidence-backed implementation and asset inventory, distinguishing confirmed technologies from proposed equivalents. Keep PortfolioAI on Next.js/React; select additional animation/scroll/3D libraries only after inspection. Framer Motion is already available. Identify appropriate PortfolioAI content, imagery/video and font licensing needs before implementation. No exact visual or motion reproduction has been completed yet.
 
 - **User experience additions (9 November):** Build a beautiful public landing page using the user's upcoming supplied components, followed by Google login and the private dashboard. Show a dismissible help prompt on every dashboard visit with a guided Sources → Review → Approve → Export walkthrough and a permanent Help/Take a tour control. These are planned, not implemented. Integrate supplied components into the existing stack with reusable components/utilities and scoped styling. Whenever the user asks “What has been done till now”, refresh this two-section progress record with verified results.
 
