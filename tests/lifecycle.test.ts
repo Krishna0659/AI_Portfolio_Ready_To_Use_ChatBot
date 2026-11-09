@@ -1,12 +1,12 @@
-import {fixturePool} from './fixture-db';
+import {fixturePool,transaction} from './fixture-db';
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,access,unlink} from 'node:fs/promises';
-import {pool,transaction,identityPool} from '../packages/db';
+import {pool,workerPool,identityPool} from '../packages/db';
 import {emptyProfile} from '../packages/contracts/profile';
 import {objectPath,queueErasure,eraseAccount,cleanupOne,deletionStatus} from '../packages/domain/lifecycle';
-after(()=>Promise.all([pool.end(),fixturePool.end(),identityPool.end()]));
+after(()=>Promise.all([pool.end(),workerPool.end(),fixturePool.end(),identityPool.end()]));
 
 test('local object keys cannot escape the storage directory',()=>{for(const key of ['../secret.pem','C:\\secret.txt','a/../../secret','bad.txt','00000000-0000-0000-0000-000000000000.exe'])assert.throws(()=>objectPath(key));});
 test('account erasure is fenced, revokes sessions, and waits for durable source cleanup',async()=>{

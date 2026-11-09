@@ -1,6 +1,6 @@
 # Phase 1 implementation status
 
-This is a functioning local development implementation, not completion of the full production specification. Hosting is intentionally deferred. No Phase 2 indexing or Phase 3 inference is implemented.
+This is a functioning local development implementation, not completion of the full production specification. Hosting is intentionally deferred until all five website phases pass. Indexing and inference belong to later projects; use `plan.md` for the current website phase boundaries.
 
 ## Implemented
 
@@ -32,8 +32,8 @@ These are implementation gaps, not merely credential or hosting tasks:
 - Multi-user GitHub App installation ownership verification, user-to-installation authorization, private-repository live verification, and webhook verification/revocation. Local-owner installation matching and scoped token minting are implemented and verified above.
 - Multi-page policy-aware crawling and robots handling, structured metadata extraction beyond reviewable text, three-way field-level synchronization/conflict resolution.
 - Independent OS/container enforcement of parser networking/filesystem limits, malware scanning, private immutable object-storage upload protocol and storage quotas. Local Python socket blocking is not a security sandbox.
-- Separate worker database role with narrowly scoped claim/heartbeat/result procedures; current worker still shares the web runtime role. Identity tables now use a separate role, ordinary workspace SQL cannot read them, and recent-authentication lookup uses a restricted boolean function. Service-specific secret distribution remains open.
-- Complete membership-aware RLS, approval/evidence deferred database constraints, profile-bearing composite keys across the full schema, protected append-only audit and dedicated erasure role.
+- Separate identity and worker roles, restricted claim/heartbeat/result procedures and active-membership/owner-write RLS are implemented and verified on 9 November. Service-specific secret distribution remains open; local processes still load shared configuration.
+- Approval/evidence deferred database constraints, profile-bearing composite keys across the full schema, protected append-only audit and dedicated erasure role remain open in the later website phases described by `plan.md`.
 - Production storage erasure, retention/reconciliation jobs, backup deletion tombstone replay and restoration testing. Local account/object deletion is implemented; external exports and backups remain outside its boundary.
 - Production fairness/load guarantees, API quotas and the complete durable KB contract/mock scenarios (timeouts, accepted/polling, generation fences, purge). Local heartbeat, recovery and bounded retry behavior is implemented.
 - Google-account deletion step-up: Google does not support forced reauthentication and authentication-time claims require enabled security-bundle features. The tested sessions have no such claim, so Google source/account erasure fails closed. Normal sign-in works. Local-development reauthentication works; negative token/callback and encrypted-flow tests pass, but the full provider fault matrix remains open.

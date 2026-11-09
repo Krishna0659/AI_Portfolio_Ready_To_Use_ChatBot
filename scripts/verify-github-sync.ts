@@ -1,5 +1,5 @@
 import {writeFile} from 'node:fs/promises';
-import {pool} from '../packages/db';
+import {identityPool as pool} from '../packages/db';
 import {ownerAppEnabled} from '../services/github/app';
 
 // Verify real imports through the UI API and worker without printing credentials or evidence.

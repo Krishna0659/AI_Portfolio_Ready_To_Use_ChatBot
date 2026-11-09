@@ -1,11 +1,11 @@
-import {fixturePool} from './fixture-db';
+import {fixturePool,transaction} from './fixture-db';
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {pool,transaction} from '../packages/db';
+import {pool,workerPool} from '../packages/db';
 import {claimJob,heartbeat,completeJob,failJob,retryDecision} from '../packages/domain/jobs';
 import {httpFailure} from '../services/fetch-broker/errors';
-after(()=>Promise.all([pool.end(),fixturePool.end()]));
+after(()=>Promise.all([pool.end(),workerPool.end(),fixturePool.end()]));
 test('retry policy backs off transient connections and respects provider waits',()=>{
  const network=new TypeError('fetch failed',{cause:Object.assign(Error('private connection details'),{code:'ECONNRESET'})});
  assert.equal(retryDecision(network,1,0,()=>0.5).retryAt?.getTime(),5000);assert.equal(retryDecision(network,3,0,()=>0.5).retryAt?.getTime(),20000);assert.equal(retryDecision(network,5,0).retryAt,null);

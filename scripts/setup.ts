@@ -27,4 +27,13 @@ if(process.env.IDENTITY_DATABASE_URL){
  await db.query('REVOKE ALL ON accounts,sessions,auth_flows FROM portfolio_runtime');
  await db.query('REVOKE INSERT,UPDATE,DELETE ON workspaces,memberships FROM portfolio_runtime');
 }
+await db.query(await readFile('packages/db/tenancy.sql','utf8'));
+if(process.env.WORKER_DATABASE_URL){
+ const url=new URL(process.env.WORKER_DATABASE_URL),secret=url.password;
+ if(url.username!=='portfolio_worker'||!/^[a-f0-9]{48}$/.test(secret))throw Error('Invalid worker role configuration');
+ await db.query(`DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='portfolio_worker') THEN CREATE ROLE portfolio_worker LOGIN PASSWORD '${secret}'; END IF; END $$`);
+ await db.query('GRANT USAGE ON SCHEMA public TO portfolio_worker');
+ await db.query('GRANT SELECT,UPDATE,DELETE ON deletion_requests,object_deletions TO portfolio_worker');
+ await db.query(await readFile('packages/db/worker.sql','utf8'));
+}
 await db.query('COMMIT');await db.end();console.log('Schema and runtime roles ready');
