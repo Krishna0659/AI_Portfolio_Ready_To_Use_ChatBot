@@ -26,8 +26,12 @@
       "metric": { "displayName": "Workspace count", "purpose": "Actual source, import, fact and version counts with tabular numerals." }
     },
     "shadows": [{ "name": "selected-source-boundary", "value": "inset 0 0 0 1px #9ab7c0", "purpose": "Persistent selection boundary, without elevation." }],
-    "motion": [],
-    "breakpoints": [{ "name": "compact-desktop", "value": "1100px" }, { "name": "mobile", "value": "760px" }]
+    "motion": [
+      { "name": "landing-action-feedback", "value": "background .2s, transform .2s", "purpose": "/landing only: glass action hover feedback; system reduced-motion suppresses transitions and hover movement." },
+      { "name": "landing-scroll-scene", "value": "Lenis + normalized story scroll progress", "purpose": "/landing only: smooth scrolling, camera framing and procedural particle P-to-sphere morph. Paused motion disables Lenis and fixes scene time/progress; rendering skips hidden/offscreen frames." },
+      { "name": "landing-story-text-and-exit", "value": "GSAP ScrollTrigger scrub + circle(0%) to circle(150%)", "purpose": "/landing only: hero rise/skew/fade, staggered chapter text entrances and paper-colored circular scene exit. GSAP context reverts on cleanup or reduced motion; reduced motion hides the portal and removes the 55svh exit tail." }
+    ],
+    "breakpoints": [{ "name": "compact-desktop", "value": "1100px" }, { "name": "mobile", "value": "760px" }, { "name": "landing-stacked-hero", "value": "1000px" }, { "name": "landing-mobile", "value": "760px" }, { "name": "landing-navigation-dock", "value": "1024px" }]
   },
   "components": [
     {
@@ -72,7 +76,8 @@
     "keyCharacteristics": ["Pale frame around a white working sheet.", "Compact IBM Plex Sans typography and tabular metrics.", "Flat bordered panels and full-width source rows.", "Sparse teal focus, selection and brand accents.", "Explicit evidence, draft, approval and delivery states."],
     "rules": [
       { "name": "The State Has Words Rule", "body": "Color supports a written state; it never replaces the status label.", "section": "colors" },
-      { "name": "The Flat Workspace Rule", "body": "Use borders and surface tone to separate workspace regions; keep the default sheet and panels free of drop shadows.", "section": "elevation" }
+      { "name": "The Flat Workspace Rule", "body": "Use borders and surface tone to separate workspace regions; keep the default sheet and panels free of drop shadows.", "section": "elevation" },
+      { "name": "Landing Surface Boundary", "body": "The /landing section in DESIGN.md describes a separate local initial approximation with original procedural Three.js Water and particle art, light serif/italic headings and glass controls. It does not replace the dashboard system, claim exact reference fidelity or describe a deployed public page.", "section": "elevation" }
     ],
     "dos": ["**Do** use the pale frame, white sheet and flat bordered panels for new workspace views.", "**Do** retain visible status words and source provenance next to evidence.", "**Do** use compact IBM Plex Sans hierarchy and tabular metrics.", "**Do** preserve visible keyboard focus and durable source selection.", "**Do** stack work regions on mobile and keep account actions reachable in Settings."],
     "donts": ["**Don't** imply that imported evidence is already approved or published.", "**Don't** introduce ambient card shadows into this flat workspace.", "**Don't** replace the compact dashboard hierarchy with oversized marketing typography.", "**Don't** describe this implementation as a user-approved image comp or a completed Impeccable visual selection process."]

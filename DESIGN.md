@@ -193,3 +193,67 @@ The approval panel stays alongside the desktop editor and presents revision meta
 - **Don't** introduce ambient card shadows into this flat workspace.
 - **Don't** replace the compact dashboard hierarchy with oversized marketing typography.
 - **Don't** describe this implementation as a user-approved image comp or a completed Impeccable visual selection process.
+
+---
+
+# Scoped Design System: `/landing`
+
+## Overview
+
+This section applies only to the local `/landing` marketing surface. The dashboard system and its frontmatter above remain authoritative for the workspace. Landing styles are scoped under `.lp`; reusable landing components and the graphics layer live separately in `utils/landing/`.
+
+The current implementation is an **initial approximation**, not an exact clone of the Emotion reference. It pairs an original procedural violet landscape with large serif statements and an illustrative workflow preview. No public landing page has been deployed. No original artwork, models, textures, proprietary fonts, or audio from the reference are borrowed for the implementation. The research inventory in `docs/LANDING_PAGE_REFERENCE.md` is reference material; its proposed effects are not a claim that those effects have shipped.
+
+Desktop screenshot verification remains incomplete. The implementation details below are extracted from current source and do not establish a completed visual-fidelity comparison.
+
+## Colors
+
+These route-local CSS tokens are defined in `utils/landing/landing.css` and do not replace dashboard tokens:
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--lp-paper` | `#f5efff` | Pale lavender content ground and light footer text |
+| `--lp-ink` | `#2a1647` | Content text, selected workflow tab, footer ground |
+| `--lp-purple` | `#9047ff` | Accent vocabulary; selection currently uses the same literal value |
+
+Scene chapters use white text over the landscape and a dark lower gradient. The workflow inset uses `#e6daf3`; the illustrative product panel uses `#fcfaff`. Scene materials form a separate purple lighting palette rather than semantic dashboard states.
+
+## Typography
+
+**Display:** Cormorant Garamond, serif fallback, weight 300, upright and italic emphasis. Headlines use `-.035em` tracking and `.92` line-height. The current desktop hero uses `clamp(60px, 6.7vw, 108px)`; section headings use `clamp(48px, 6.6vw, 104px)`. Italic introductory phrases contrast with upright statements.
+
+**Body and controls:** IBM Plex Sans, sans-serif fallback, with a 16px route base and 1.6 line-height on supporting paragraphs. Small workflow numbering uses IBM Plex Mono at 11px. Cormorant is a deliberate alternative to the reference's proprietary display face; its metrics and wrapping are not identical.
+
+## Layout
+
+Three viewport-height text chapters share a sticky `100svh` landscape. An additional 55svh story tail gives the circular scene exit room to expand; reduced motion removes that tail and hides the portal. Desktop page margins are 3.4%; the hero headline is asymmetrical, followed by left- and right-aligned chapter copy. The pale workflow section rounds into the scene and uses a two-column preview (1fr / 1.4fr). Principles and footer also use two columns.
+
+At 1024px and below, navigation becomes a fixed bottom-centered dock, at most 350px wide, with an expandable panel above it. Controls move above the dock and footer bottom padding grows to 160px. At 1000px, the hero stacks and demo spacing tightens. At 760px, page margins become 20px, and workflow, principles and footer stack. The phone hero uses `clamp(46px, 12vw, 62px)` and chapter headings use `clamp(42px, 12vw, 60px)`. These are implemented landing breakpoints, not the reference's measured breakpoints.
+
+## Elevation & Depth
+
+Landscape depth comes from Three.js perspective, fog, lighting, reflective Water and additive particles. Glass actions use translucent gradients, a bright inset rim and 12px backdrop blur. The illustrative product sheet rotates -3deg (-2deg on mobile) with a soft `0 25px 60px #40246020` shadow. These marketing treatments are scoped to `/landing`; the dashboard remains flat.
+
+## Shapes
+
+Actions and workflow tabs use pill forms. The workflow section has 40px upper corners, the demo inset a 24px radius, and the product preview a 12px radius. The scene combines continuous faceted terrain, tapered curved grass blades, a tubular architectural arch and a luminous particle P. The mobile dock has a 36px radius and its menu panel a 24px radius.
+
+## Components
+
+- `LandingPage.tsx` composes the page and exports `LandingAction`, `LandingNavigation`, `WorkflowPreview` and `LandingFooter`. Workspace actions link to `/`.
+- `Landscape.tsx` is dynamically loaded client-side. Original generated geometry and a generated normal texture feed Three.js Water; a shader morphs the particle P toward a sphere as story scroll progress changes. This is a limited original scene, not the reference's complete environment or camera choreography.
+- `scenery.ts` generates a continuous river valley, instanced curved grass ribbons (14,000 high / 5,000 low quality) and a dark metallic arch with moderate reflectivity. All geometry is generated locally; no reference scene assets are imported.
+- `StoryMotion.tsx` uses GSAP ScrollTrigger for scrubbed hero rise/skew/fade, staggered chapter text entrances and an expanding paper-colored circular exit (`circle(0%)` to `circle(150%)`). Its GSAP context reverts on cleanup or when reduced motion is enabled, restoring readable static content. This CSS clip-path transition approximates the reference's exit; it does not reproduce its custom noise effects.
+- `WorkflowPreview` presents Collect, Review and Approve as an illustrative HTML panel, not real product screenshots or a live import operation. Tabs expose selection and support arrow keys, Home and End.
+- `LandingAction` has a minimum height of 46px, a 200ms background/transform transition and a 2px upward hover movement. Keyboard focus uses a 2px current-color outline with 6px offset.
+- Lenis smooths scrolling when motion is enabled. Reduced-motion preference initializes the motion state; a visible pause/enable control can override it. Paused motion fixes scene time and progress and disables Lenis; CSS suppresses transitions under the system reduced-motion preference. Low quality reduces particles, grass, reflection resolution and pixel ratio. Rendering skips hidden/offscreen frames; a CSS landscape remains when WebGL is unavailable. These are implemented safeguards, not measured frame-rate guarantees.
+- A skip link goes to product details. Mobile navigation exposes expanded state; Escape within the navigation closes the panel and returns focus to Menu. Quality/motion buttons expose pressed state.
+
+## Do's and Don'ts
+
+- **Do** preserve the violet palette, light serif/italic contrast, scene-led opening and clear entry into the workspace within this route.
+- **Do** keep landing styles and heavy graphics isolated in `utils/landing/` and preserve dashboard styling.
+- **Do** keep evidence collection, review, approval and export claims faithful to implemented behavior.
+- **Don't** label this initial approximation an exact reproduction, a completed reference-fidelity pass or a publicly deployed page.
+- **Don't** reuse inventoried reference artwork without appropriate rights, or imply the illustrative preview is a real product capture.
+- **Don't** describe unimplemented audio, image distortion or a conversational assistant as existing features, or equate the implemented circular exit with exact reference fidelity.

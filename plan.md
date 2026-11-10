@@ -1,8 +1,16 @@
 # PortfolioAI working plan
 
-Last updated: 2 November 2026 (Asia/Calcutta).
+Last updated: 10 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
+
+- [x] 10 November: added the asymmetric, clearly labeled illustrative product showcase and scroll-linked presentation. Production build and TypeScript passed; `/landing` opened on local port 3100 without browser console errors. Local preview left running at the user's request. Landing files and their dependencies prepared as a separate Git commit; unrelated worker/auth changes remain outside it. Exact reference fidelity remains a limitation, not a passed acceptance claim.
+
+- [x] Landing refinement: replaced repeated cone scenery with continuous river terrain, instanced curved grass and an architectural gateway; added reusable `scenery.ts` and `StoryMotion.tsx`, GSAP scroll-linked text and a circular exit, plus a mobile dock with Escape/focus return. Reduced-motion mode removes animations and the transition spacer. TypeScript and the final production build passed; mobile scene/menu/Escape, chapter movement and exit were inspected in-browser with no logged errors. Desktop DOM at 1440px showed no horizontal overflow and headline bounds inside the viewport. Focused code review found no material fixes; full desktop screenshot and exact-reference acceptance remain open.
+
+- [x] Added a local `/landing` route with reusable components in `utils/landing`, concise PortfolioAI copy, original Three.js particle/water scenery, scroll-linked camera movement, Lenis scrolling, mobile navigation, keyboard-operated workflow tabs and motion/quality controls. Existing `/` workspace is preserved. Installed pinned Three.js, GSAP/React adapter, Lenis, Howler, self-hosted fonts and matching types. GSAP/Howler are prepared dependencies, not active features. TypeScript and production build passed. Browser checks verified mobile menu, workflow clicks/arrow keys and pause-motion state; 390px layout and 1440px DOM overflow checked. Desktop screenshot capture was clipped by the browser tool, so full desktop visual approval is not claimed. Final review fixes for header contrast, WebGL recovery and reduced-motion GPU drawing passed code review and a final production build. Landing design documentation was added without replacing the dashboard system. No deployment.
+
+- [x] Landing-page reference research completed on 9 November: inspected Emotion Agency's desktop/mobile homepage, motion, navigation, themes and public assets; verified rendering/animation library evidence; saved 21 reference images/textures and one stylesheet under ignored `.local/design-reference/emotion-2026-11-09/`. The user clarified that implementation scope is the landing page only. Findings, asset requirements, limitations and a local build sequence are in [landing-page reference analysis](docs/LANDING_PAGE_REFERENCE.md). Reference assets remain research-only and are not shipped.
 
 These are verified local capabilities, not a declaration that any complete production phase has passed. Work already spans several phases of the website PRD. **Phase 1 remains open** pending the checks and passkey work listed in section 2.
 
@@ -33,6 +41,8 @@ These are verified local capabilities, not a declaration that any complete produ
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+**Current user-directed design work — 9 November:** The refined local landing implementation is available at `/landing`, including original terrain, circular exit, text choreography and mobile dock. It remains a reference-inspired approximation: the reference's detailed materials/lighting, media distortion, asymmetric product showcase and full motion choreography are not reproduced exactly. Keep reference assets separate from shipping assets. Complete fidelity refinement, performance measurement and an unclipped desktop visual review before claiming the requested match. This work does not close any foundation/release checks below or authorize hosting.
 
 **Hosting decision — updated by the user on 1 November 2026:** Hosting is paused for every phase. Do not deploy or set up public hosting during intermediate phases. Finish all website phases, verify the complete website works end to end, and only then perform hosting setup and deployment as the final step. Local development and testing continue throughout.
 
