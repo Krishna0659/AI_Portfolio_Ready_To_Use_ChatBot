@@ -1,0 +1,6 @@
+.canyon404{--canyon-sky:#1b112b;--canyon-rock:#59416c;--canyon-shadow:#2a1647;--canyon-number:#a886bb;--canyon-cactus:#80539e;--canyon-cactus-shadow:#503268;position:relative;isolation:isolate;min-height:100svh;display:grid;place-items:center;overflow:hidden;background:var(--canyon-sky);color:#f5efff}
+.canyon404-art{position:absolute;inset:0;z-index:-1;pointer-events:none}.canyon404-svg{width:100%;height:100%;background:var(--canyon-rock)}
+.canyon404-copy{max-width:620px;margin:0 20px;padding:36px;text-align:center;background:#1b112be8;border:1px solid #b198c655;border-radius:16px;backdrop-filter:blur(12px)}
+.canyon404-copy h1{font:300 clamp(52px,8vw,88px)/1 'Cormorant Garamond',serif;margin:0 0 20px}.canyon404-copy p{color:inherit;line-height:1.6;margin:14px 0}.canyon404-copy a{display:inline-block;color:inherit;padding:12px 24px;border:1px solid currentColor;border-radius:30px;text-decoration:none}.canyon404-copy a:focus-visible{outline:3px solid #9047ff;outline-offset:5px}
+:root[data-public-theme=light] .canyon404{--canyon-sky:#f5efff;--canyon-rock:#c6afd8;--canyon-shadow:#ab8bc4;--canyon-number:#76518c;--canyon-cactus:#a47ac3;--canyon-cactus-shadow:#77518e;color:#2a1647}
+:root[data-public-theme=light] .canyon404-copy{background:#f5efffed;border-color:#b198c6}

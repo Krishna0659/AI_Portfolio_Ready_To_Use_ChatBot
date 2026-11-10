@@ -4,6 +4,8 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] User-supplied canyon/cactus 404 adapted as reusable `utils/Canyon404.tsx`, with a thin `app/not-found.tsx` route, requested Oops message, working landing link and reduced-motion-aware parallax. Added permanent reusable-component placement rules to AGENTS.md. Shared light/dark/system preference now drives landing, authentication, 404 and dashboard themes; the dashboard selector and global switch synchronize. TypeScript/build passed, and the unknown-route page and theme attributes were verified in-browser without mobile overflow.
+
 - [x] Login redesigned with reusable `utils/auth` components, original animated violet prism, frosted panel and landing typography. Google is the sole sign-in link; the local-login endpoint returns 410. Production build/TypeScript passed and 390px browser inspection found no overflow. Uilora full source was login-gated, so this is an original adaptation rather than imported source. Google OAuth completion was not repeated in this UI batch.
 
 - [x] 10 November: added the asymmetric, clearly labeled illustrative product showcase and scroll-linked presentation. Production build and TypeScript passed; `/landing` opened on local port 3100 without browser console errors. Local preview left running at the user's request. Landing files and their dependencies prepared as a separate Git commit; unrelated worker/auth changes remain outside it. Exact reference fidelity remains a limitation, not a passed acceptance claim.
@@ -43,6 +45,8 @@ These are verified local capabilities, not a declaration that any complete produ
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+**Reusable UI rule:** Keep reusable components under `utils/`; route files import them. New valid routes automatically replace the unknown-route fallback. Finish authenticated dashboard visual verification for the shared theme with a signed-in account.
 
 **Authentication UI follow-up:** Verify Google OAuth with a real user account after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
 

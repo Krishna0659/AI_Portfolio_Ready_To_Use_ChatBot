@@ -1,5 +1,9 @@
 # Working plan maintenance
 
+## Reusable UI components
+
+Always put reusable website components in the root `utils/` folder, grouped by feature when useful (for example `utils/auth`, `utils/landing`, `utils/Canyon404.tsx`). Route files import these components and remain thin. Reuse existing components before creating alternatives. This applies to all future pages, themes, animations and error screens.
+
 Read `plan.md` before continuing project work. Update its two sections after each completed work batch with verified results and remaining tasks. Hosting stays paused throughout every phase; hosting setup and deployment happen only after all website phases are complete and the website works end to end. Do not treat an intermediate phase as deployment authorization.
 
 <!-- BEGIN:nextjs-agent-rules -->
