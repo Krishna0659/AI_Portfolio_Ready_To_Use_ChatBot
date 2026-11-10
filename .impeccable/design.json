@@ -1,86 +1,283 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-01T09:45:02.1919255Z",
+  "generatedAt": "2026-11-10T11:39:48.591Z",
   "title": "Design System: PortfolioAI",
   "extensions": {
     "themes": {
-      "behavior": "Settings theme applies immediately to the workspace; Save settings persists it. System follows prefers-color-scheme.",
-      "dark": {"ground":"#16191b","surface":"#202426","text":"#edf0f1","muted":"#b5bec2","border":"#363d40","accent":"#80c4d5","active":"#333b3e","control":"#667277","well":"#292f32","selected":"#2b4148","negative":"#ffb2bc"}
+      "behavior": "Fixed light Paper Glass dashboard and widget preview. No theme selector or theme-applying effect. Historical settings.theme is retained backend data only."
     },
     "colorMeta": {
-      "ground": { "role": "neutral", "displayName": "Pale Frame", "tonalRamp": ["oklch(15% 0.008 220)", "oklch(27% 0.012 220)", "oklch(39% 0.015 220)", "oklch(51% 0.018 220)", "oklch(63% 0.018 220)", "oklch(75% 0.015 220)", "oklch(87% 0.01 220)", "oklch(95% 0.005 220)"] },
-      "surface": { "role": "neutral", "displayName": "Working White", "tonalRamp": ["oklch(15% 0 0)", "oklch(27% 0 0)", "oklch(39% 0 0)", "oklch(51% 0 0)", "oklch(63% 0 0)", "oklch(75% 0 0)", "oklch(87% 0 0)", "oklch(95% 0 0)"] },
-      "text": { "role": "neutral", "displayName": "Reading Charcoal", "tonalRamp": ["oklch(15% 0.008 225)", "oklch(27% 0.012 225)", "oklch(39% 0.015 225)", "oklch(51% 0.018 225)", "oklch(63% 0.018 225)", "oklch(75% 0.015 225)", "oklch(87% 0.01 225)", "oklch(95% 0.005 225)"] },
-      "muted": { "role": "neutral", "displayName": "Slate Gray", "tonalRamp": ["oklch(15% 0.008 230)", "oklch(27% 0.012 230)", "oklch(39% 0.015 230)", "oklch(51% 0.018 230)", "oklch(63% 0.018 230)", "oklch(75% 0.015 230)", "oklch(87% 0.01 230)", "oklch(95% 0.005 230)"] },
-      "border": { "role": "neutral", "displayName": "Quiet Divider", "tonalRamp": ["oklch(15% 0.006 220)", "oklch(27% 0.01 220)", "oklch(39% 0.012 220)", "oklch(51% 0.015 220)", "oklch(63% 0.015 220)", "oklch(75% 0.012 220)", "oklch(87% 0.008 220)", "oklch(95% 0.004 220)"] },
-      "accent": { "role": "primary", "displayName": "Evidence Teal", "tonalRamp": ["oklch(15% 0.02 220)", "oklch(27% 0.04 220)", "oklch(39% 0.06 220)", "oklch(51% 0.08 220)", "oklch(63% 0.09 220)", "oklch(75% 0.07 220)", "oklch(87% 0.04 220)", "oklch(95% 0.015 220)"] },
-      "active": { "role": "neutral", "displayName": "Navigation Gray", "tonalRamp": ["oklch(15% 0.008 220)", "oklch(27% 0.012 220)", "oklch(39% 0.016 220)", "oklch(51% 0.02 220)", "oklch(63% 0.02 220)", "oklch(75% 0.016 220)", "oklch(87% 0.012 220)", "oklch(95% 0.006 220)"] },
-      "negative": { "role": "semantic", "displayName": "Error Crimson", "tonalRamp": ["oklch(15% 0.025 20)", "oklch(27% 0.07 20)", "oklch(39% 0.12 20)", "oklch(51% 0.16 20)", "oklch(63% 0.17 20)", "oklch(75% 0.12 20)", "oklch(87% 0.06 20)", "oklch(95% 0.02 20)"] },
-      "action": { "role": "primary", "displayName": "Action Charcoal", "tonalRamp": ["oklch(15% 0.01 215)", "oklch(27% 0.015 215)", "oklch(39% 0.02 215)", "oklch(51% 0.025 215)", "oklch(63% 0.025 215)", "oklch(75% 0.02 215)", "oklch(87% 0.012 215)", "oklch(95% 0.005 215)"] }
+      "ground": {
+        "role": "neutral",
+        "displayName": "Lavender ground"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Solid paper"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Plum ink"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted plum"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Lavender divider"
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Purple accent"
+      },
+      "active": {
+        "role": "neutral",
+        "displayName": "Active lavender"
+      },
+      "negative": {
+        "role": "semantic",
+        "displayName": "Error rose"
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Plum action"
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "Control outline"
+      },
+      "hover": {
+        "role": "neutral",
+        "displayName": "Hover lavender"
+      },
+      "well": {
+        "role": "neutral",
+        "displayName": "Pale lavender well"
+      },
+      "selected": {
+        "role": "neutral",
+        "displayName": "Selected evidence"
+      },
+      "neutral": {
+        "role": "neutral",
+        "displayName": "Neutral badge"
+      },
+      "panel-glass": {
+        "role": "neutral",
+        "displayName": "Panel glass"
+      },
+      "sidebar-glass": {
+        "role": "neutral",
+        "displayName": "Sidebar glass"
+      },
+      "summary-glass": {
+        "role": "neutral",
+        "displayName": "Summary glass"
+      }
     },
     "typographyMeta": {
-      "headline": { "displayName": "Page heading", "purpose": "Compact dashboard page titles; 22px on mobile." },
-      "title": { "displayName": "Panel title", "purpose": "Source, activity, profile and approval panel headings." },
-      "body": { "displayName": "Working copy", "purpose": "Descriptions, controls and evidence; evidence uses 1.7 line-height." },
-      "label": { "displayName": "Metadata", "purpose": "Timestamps, secondary information and compact labels." },
-      "metric": { "displayName": "Workspace count", "purpose": "Actual source, import, fact and version counts with tabular numerals." }
+      "headline": {
+        "displayName": "Workspace heading",
+        "purpose": "IBM Plex Sans 34px; 30px at 1150px and 28px at 760px."
+      },
+      "title": {
+        "displayName": "Panel title",
+        "purpose": "Source, activity, profile and approval panel headings."
+      },
+      "body": {
+        "displayName": "Working copy",
+        "purpose": "Descriptions, controls and evidence; evidence uses 1.7 line-height."
+      },
+      "label": {
+        "displayName": "Metadata",
+        "purpose": "Timestamps, secondary information and compact labels."
+      },
+      "metric": {
+        "displayName": "Workspace count",
+        "purpose": "Actual source, import, fact and version counts with tabular numerals."
+      }
     },
-    "shadows": [{ "name": "selected-source-boundary", "value": "inset 0 0 0 1px #9ab7c0", "purpose": "Persistent selection boundary, without elevation." }],
-    "motion": [
-      { "name": "landing-action-feedback", "value": "background .2s, transform .2s", "purpose": "/landing only: glass action hover feedback; system reduced-motion suppresses transitions and hover movement." },
-      { "name": "landing-scroll-scene", "value": "Lenis + normalized story scroll progress", "purpose": "/landing only: smooth scrolling, camera framing and procedural particle P-to-sphere morph. Paused motion disables Lenis and fixes scene time/progress; rendering skips hidden/offscreen frames." },
-      { "name": "landing-story-text-and-exit", "value": "GSAP ScrollTrigger scrub + circle(0%) to circle(150%)", "purpose": "/landing only: hero rise/skew/fade, staggered chapter text entrances and paper-colored circular scene exit. GSAP context reverts on cleanup or reduced motion; reduced motion hides the portal and removes the 55svh exit tail." }
+    "shadows": [
+      {
+        "name": "sidebar-paper",
+        "value": "5px 6px 0 #2a1647",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      },
+      {
+        "name": "panel-paper",
+        "value": "4px 5px 0 #ddd0ed",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      },
+      {
+        "name": "summary-paper",
+        "value": "4px 4px 0 #d1bee6",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      },
+      {
+        "name": "active-navigation",
+        "value": "3px 3px 0 #2a1647",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      },
+      {
+        "name": "primary-action",
+        "value": "3px 3px 0 #b99bd9",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      },
+      {
+        "name": "selected-source",
+        "value": "inset 3px 0 #7937cf",
+        "purpose": "Dashboard Paper Glass treatment from implemented CSS."
+      }
     ],
-    "breakpoints": [{ "name": "compact-desktop", "value": "1100px" }, { "name": "mobile", "value": "760px" }, { "name": "landing-stacked-hero", "value": "1000px" }, { "name": "landing-mobile", "value": "760px" }, { "name": "landing-navigation-dock", "value": "1024px" }]
+    "motion": [
+      {
+        "name": "landing-action-feedback",
+        "value": "background .2s, transform .2s",
+        "purpose": "/landing only: glass action hover feedback; system reduced-motion suppresses transitions and hover movement."
+      },
+      {
+        "name": "landing-scroll-scene",
+        "value": "Lenis + normalized story scroll progress",
+        "purpose": "/landing only: smooth scrolling, camera framing and procedural particle P-to-sphere morph. Paused motion disables Lenis and fixes scene time/progress; rendering skips hidden/offscreen frames."
+      },
+      {
+        "name": "landing-story-text-and-exit",
+        "value": "GSAP ScrollTrigger scrub + circle(0%) to circle(150%)",
+        "purpose": "/landing only: hero rise/skew/fade, staggered chapter text entrances and paper-colored circular scene exit. GSAP context reverts on cleanup or reduced motion; reduced motion hides the portal and removes the 55svh exit tail."
+      },
+      {
+        "name": "dashboard-feedback",
+        "value": "background 180ms ease, box-shadow 180ms ease",
+        "purpose": "Navigation and summary states; reduced-motion disables transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "landing-stacked-hero",
+        "value": "1000px"
+      },
+      {
+        "name": "landing-mobile",
+        "value": "760px"
+      },
+      {
+        "name": "landing-navigation-dock",
+        "value": "1024px"
+      },
+      {
+        "name": "dashboard-wide",
+        "value": "1600px"
+      },
+      {
+        "name": "dashboard-compact",
+        "value": "1150px"
+      },
+      {
+        "name": "dashboard-inherited-source-stack",
+        "value": "1100px"
+      },
+      {
+        "name": "dashboard-mobile",
+        "value": "760px"
+      }
+    ]
   },
   "components": [
     {
-      "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "Compact charcoal action; disabled while unavailable.",
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Plum Paper Glass primary action.",
       "html": "<button class=\"ds-primary\">Save draft</button>",
-      "css": ".ds-primary{font:500 14px 'IBM Plex Sans',sans-serif;background:#222b2e;color:var(--surface,#fff);border:1px solid #222b2e;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}.ds-primary:hover{background:#344348}.ds-primary:focus-visible{outline:2px solid var(--accent,#1b6c80);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:not-allowed}@media(max-width:760px){.ds-primary{min-height:44px}}"
+      "css": ".ds-primary{font:500 14px 'IBM Plex Sans',sans-serif;background:#2a1647;color:var(--surface,#fff);border:1px solid #2a1647;border-radius:10px;padding:8px 12px;min-height:40px;cursor:pointer}.ds-primary:hover{background:#452367}.ds-primary:focus-visible{outline:2px solid var(--accent,#7937cf);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:not-allowed}@media(max-width:760px){.ds-primary{min-height:44px}}.ds-primary{border-width:1.5px;padding:11px 17px;box-shadow:3px 3px 0 #b99bd9;color:#fff}"
     },
     {
-      "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary", "description": "Outlined supporting actions such as opening the profile editor.",
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined supporting actions such as opening the profile editor.",
       "html": "<button class=\"ds-secondary\">Open profile editor</button>",
-      "css": ".ds-secondary{font:500 14px 'IBM Plex Sans',sans-serif;background:var(--surface,#fff);color:var(--text,#202629);border:1px solid #cdd3d5;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}.ds-secondary:hover{background:#f0f4f5}.ds-secondary:focus-visible{outline:2px solid var(--accent,#1b6c80);outline-offset:3px}.ds-secondary:disabled{opacity:.5;cursor:not-allowed}@media(max-width:760px){.ds-secondary{min-height:44px}}"
+      "css": ".ds-secondary{font:500 14px 'IBM Plex Sans',sans-serif;background:var(--surface,#fff);color:var(--text,#2a1647);border:1px solid #b6a2cb;border-radius:10px;padding:8px 12px;min-height:40px;cursor:pointer}.ds-secondary:hover{background:#f0e5ff}.ds-secondary:focus-visible{outline:2px solid var(--accent,#7937cf);outline-offset:3px}.ds-secondary:disabled{opacity:.5;cursor:not-allowed}@media(max-width:760px){.ds-secondary{min-height:44px}}"
     },
     {
-      "name": "Labeled Input", "kind": "input", "refersTo": "input", "description": "Visible label, gray stroke and teal keyboard focus.",
+      "name": "Labeled Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Solid pale input with visible label and purple focus.",
       "html": "<label class=\"ds-label\">Display name<input class=\"ds-input\" placeholder=\"Name this profile\"></label>",
-      "css": ".ds-label{display:block;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--text,#202629)}.ds-input{display:block;max-width:calc(100% - 22px);width:280px;margin-top:7px;border:1px solid #cdd3d5;border-radius:6px;padding:10px;background:var(--surface,#fff);color:var(--text,#202629);font:400 14px 'IBM Plex Sans',sans-serif;caret-color:var(--accent,#1b6c80)}.ds-input::placeholder{color:#697479}.ds-input:focus-visible{outline:2px solid var(--accent,#1b6c80);outline-offset:3px}"
+      "css": ".ds-label{display:block;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--text,#2a1647)}.ds-input{display:block;max-width:calc(100% - 22px);width:280px;margin-top:7px;border:1px solid #b6a2cb;border-radius:10px;padding:10px;background:var(--surface,#fff);color:var(--text,#2a1647);font:400 14px 'IBM Plex Sans',sans-serif;caret-color:var(--accent,#7937cf)}.ds-input::placeholder{color:#695779}.ds-input:focus-visible{outline:2px solid var(--accent,#7937cf);outline-offset:3px}.ds-input{border-radius:9px;background:#fffcff;line-height:1.5}"
     },
     {
-      "name": "Workspace Navigation", "kind": "nav", "refersTo": "nav-active", "description": "Quiet navigation with a persistent active background and source count.",
+      "name": "Workspace Navigation",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Outlined active lavender navigation with real count.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Workspace preview\"><button class=\"ds-nav-active\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><path d=\"M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z\"/></svg>Overview</button><button>Sources<span>3</span></button></nav>",
-      "css": ".ds-nav{display:grid;gap:6px;width:190px;background:var(--ground,#edf1f2);padding:12px}.ds-nav button{display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:6px;background:transparent;padding:10px 12px;min-height:36px;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--text,#202629);cursor:pointer}.ds-nav button:hover{background:#f0f4f5}.ds-nav .ds-nav-active{background:var(--active,#e0e6e8)}.ds-nav span{margin-left:auto;color:var(--muted,#60696e);font-variant-numeric:tabular-nums}.ds-nav button:focus-visible{outline:2px solid var(--accent,#1b6c80);outline-offset:3px}"
+      "css": ".ds-nav{display:grid;gap:6px;width:190px;background:var(--ground,#f5efff);padding:12px}.ds-nav button{display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:10px;background:transparent;padding:10px 12px;min-height:40px;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--text,#2a1647);cursor:pointer}.ds-nav button:hover{background:#f0e5ff}.ds-nav .ds-nav-active{background:var(--active,#e8d7ff)}.ds-nav span{margin-left:auto;color:var(--muted,#695779);font-variant-numeric:tabular-nums}.ds-nav button:focus-visible{outline:2px solid var(--accent,#7937cf);outline-offset:3px}.ds-nav button{min-height:46px;border:1.5px solid transparent;border-radius:12px;transition:background 180ms ease,box-shadow 180ms ease}.ds-nav .ds-nav-active{border-color:#2a1647;box-shadow:3px 3px 0 #2a1647}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none}}"
     },
     {
-      "name": "Status Badges", "kind": "chip", "refersTo": "badge", "description": "Read-only state labels; neutral, successful and failed.",
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Written neutral, success and failed state labels.",
       "html": "<span class=\"ds-badge\">Draft</span> <span class=\"ds-badge ds-success\">Ready to review</span> <span class=\"ds-badge ds-failed\">failed</span>",
-      "css": ".ds-badge{display:inline-block;white-space:nowrap;font:500 11px/1.3 'IBM Plex Sans',sans-serif;background:#edf0f1;color:#4e595f;border-radius:4px;padding:4px 7px}.ds-success{background:#e5f2ed;color:#21593e}.ds-failed{background:#fbe9eb;color:#922532}"
+      "css": ".ds-badge{display:inline-block;white-space:nowrap;font:500 11px/1.3 'IBM Plex Sans',sans-serif;background:#eee5f6;color:#695779;border-radius:4px;padding:4px 7px}.ds-success{background:#e3f1e9;color:#285c44}.ds-failed{background:#fff0f4;color:#9b254d}.ds-badge{border-radius:6px}"
     },
     {
-      "name": "Workspace Panel", "kind": "card", "refersTo": "panel", "description": "Flat white content container with divided header and footer.",
+      "name": "Workspace Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Translucent Paper Glass content panel.",
       "html": "<section class=\"ds-panel\"><h2>Recent activity</h2><p>Your import and approval activity will appear here.</p><footer>Evidence first. Approval always.</footer></section>",
-      "css": ".ds-panel{border:1px solid var(--border,#e4e8e9);border-radius:12px;overflow:hidden;background:var(--surface,#fff);font:14px/1.6 'IBM Plex Sans',sans-serif;color:var(--text,#202629)}.ds-panel h2{font-size:16px;font-weight:600;margin:0;padding:18px 20px}.ds-panel p{margin:0;padding:28px 20px;color:var(--muted,#60696e)}.ds-panel footer{padding:15px 20px;border-top:1px solid var(--border,#e4e8e9);font-size:12px;color:var(--muted,#60696e)}"
+      "css": ".ds-panel{border:1px solid var(--border,#ddd0eb);border-radius:12px;overflow:hidden;background:var(--surface,#fff);font:14px/1.6 'IBM Plex Sans',sans-serif;color:var(--text,#2a1647)}.ds-panel h2{font-size:16px;font-weight:600;margin:0;padding:18px 20px}.ds-panel p{margin:0;padding:28px 20px;color:var(--muted,#695779)}.ds-panel footer{padding:15px 20px;border-top:1px solid var(--border,#ddd0eb);font-size:12px;color:var(--muted,#695779)}.ds-panel{background:#ffffffb8;border:1.5px solid #2a1647;border-radius:20px;box-shadow:4px 5px 0 #ddd0ed;backdrop-filter:blur(12px)}.ds-panel h2{padding:20px 22px}"
     },
     {
-      "name": "Selected Source Row", "kind": "custom", "refersTo": "source-row", "description": "Durable selected evidence with written import status and pressed semantics.",
+      "name": "Selected Source Row",
+      "kind": "custom",
+      "refersTo": "source-row",
+      "description": "Selected evidence with written status and purple edge.",
       "html": "<button class=\"ds-source\" aria-pressed=\"true\"><span><strong>Resume.docx</strong><small>Document</small></span><span class=\"ds-source-status\">Ready to review</span></button>",
-      "css": ".ds-source{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;min-height:72px;padding:15px 20px;text-align:left;border:0;border-top:1px solid var(--border,#e4e8e9);border-radius:0;background:#e9f1f3;box-shadow:inset 0 0 0 1px #9ab7c0;color:var(--text,#202629);font:14px 'IBM Plex Sans',sans-serif;cursor:pointer}.ds-source strong{display:block;font-weight:500;overflow-wrap:anywhere}.ds-source small{display:block;font-size:12px;color:var(--muted,#60696e);margin-top:4px}.ds-source-status{white-space:nowrap;font-size:11px;font-weight:500;line-height:1.3;background:#e5f2ed;color:#21593e;border-radius:4px;padding:4px 7px}.ds-source:hover{background:#e9f1f3}.ds-source:focus-visible{outline:2px solid var(--accent,#1b6c80);outline-offset:3px}"
+      "css": ".ds-source{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;min-height:72px;padding:15px 20px;text-align:left;border:0;border-top:1px solid var(--border,#ddd0eb);border-radius:0;background:#eee1ff;box-shadow:inset 0 0 0 1px #7937cf;color:var(--text,#2a1647);font:14px 'IBM Plex Sans',sans-serif;cursor:pointer}.ds-source strong{display:block;font-weight:500;overflow-wrap:anywhere}.ds-source small{display:block;font-size:12px;color:var(--muted,#695779);margin-top:4px}.ds-source-status{white-space:nowrap;font-size:11px;font-weight:500;line-height:1.3;background:#e3f1e9;color:#285c44;border-radius:4px;padding:4px 7px}.ds-source:hover{background:#eee1ff}.ds-source:focus-visible{outline:2px solid var(--accent,#7937cf);outline-offset:3px}.ds-source{box-shadow:inset 3px 0 #7937cf}.ds-source-status{border-radius:6px}"
     }
   ],
   "narrative": {
-    "northStar": "The Framed Sheet",
-    "overview": "PortfolioAI places a dense, practical workspace inside a pale blue-gray frame. A flat white working sheet, compact navigation, restrained typography and divided source rows keep evidence and editing actions easy to inspect. The outlined P mark is the only brand illustration.\n\nThis document records the implemented system in `app/style.css` and `app/workspace.tsx`, checked against the screenshots in `docs/screenshots`. The user requested the denser dashboard composition. The name above describes the implemented direction; no image comp was approved, and the complete Impeccable visual selection process was not performed. It is not a claim of user approval of every visual choice.",
-    "keyCharacteristics": ["Pale frame around a white working sheet.", "Compact IBM Plex Sans typography and tabular metrics.", "Flat bordered panels and full-width source rows.", "Sparse teal focus, selection and brand accents.", "Explicit evidence, draft, approval and delivery states."],
-    "rules": [
-      { "name": "The State Has Words Rule", "body": "Color supports a written state; it never replaces the status label.", "section": "colors" },
-      { "name": "The Flat Workspace Rule", "body": "Use borders and surface tone to separate workspace regions; keep the default sheet and panels free of drop shadows.", "section": "elevation" },
-      { "name": "Landing Surface Boundary", "body": "The /landing section in DESIGN.md describes a separate local initial approximation with original procedural Three.js Water and particle art, light serif/italic headings and glass controls. It does not replace the dashboard system, claim exact reference fidelity or describe a deployed public page.", "section": "elevation" }
+    "northStar": "Paper Glass workspace",
+    "overview": "The supplied PaperGlass direction becomes a lavender/plum evidence workspace with translucent panels, firm outlines and crisp offset shadows. IBM Plex Sans keeps working controls legible. Source-derived documentation only; no browser-verification claim. Landing and authentication remain separate surfaces.",
+    "keyCharacteristics": [
+      "Lavender and plum.",
+      "Outlined translucent paper.",
+      "Real clickable summary counts.",
+      "Five essential destinations.",
+      "Explicit evidence, review and approval."
     ],
-    "dos": ["**Do** use the pale frame, white sheet and flat bordered panels for new workspace views.", "**Do** retain visible status words and source provenance next to evidence.", "**Do** use compact IBM Plex Sans hierarchy and tabular metrics.", "**Do** preserve visible keyboard focus and durable source selection.", "**Do** stack work regions on mobile and keep account actions reachable in Settings."],
-    "donts": ["**Don't** imply that imported evidence is already approved or published.", "**Don't** introduce ambient card shadows into this flat workspace.", "**Don't** replace the compact dashboard hierarchy with oversized marketing typography.", "**Don't** describe this implementation as a user-approved image comp or a completed Impeccable visual selection process."]
+    "rules": [
+      {
+        "name": "Landing Surface Boundary",
+        "body": "The /landing section in DESIGN.md describes a separate local initial approximation with original procedural Three.js Water and particle art, light serif/italic headings and glass controls. It does not replace the dashboard system, claim exact reference fidelity or describe a deployed public page.",
+        "section": "elevation"
+      },
+      {
+        "name": "Written State",
+        "body": "Retain written statuses and source provenance.",
+        "section": "colors"
+      },
+      {
+        "name": "Paper Glass Depth",
+        "body": "Use the supplied reference outline and offset-shadow vocabulary within the dashboard.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Use actual workspace values.",
+      "Keep evidence separate from draft.",
+      "Keep delivery history in Settings advanced disclosure.",
+      "Preserve keyboard focus and mobile navigation."
+    ],
+    "donts": [
+      "Do not restore dark/light controls.",
+      "Do not add fake charts, people or notification counts.",
+      "Do not claim visual verification from source inspection."
+    ]
   }
 }
-

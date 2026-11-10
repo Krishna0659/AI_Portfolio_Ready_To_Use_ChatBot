@@ -4,6 +4,10 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Redesigned the dashboard using the supplied Paper Glass reference: lavender/plum palette, outlined translucent surfaces, responsive sidebar, actionable summaries and existing source/review/version workflows. Extracted `WorkspaceSidebar`, `SummaryCards` and `SourceList` into `utils/dashboard`. Moved integration delivery into an advanced Settings disclosure; no fabricated charts or metrics and no new dependencies. Removed the remaining workspace theme selector/effect and themed widget appearance, completing the user's request to remove mode switching. Updated design tokens and documentation. TypeScript and production build passed; code review fixes preserve unsaved edits when using the logo. Browser capture of the layout fixture timed out, so rendered mobile/desktop and authenticated interaction validation remain open.
+
+- [x] Resolved the local sign-in connection issue: Google returns to the configured `http://localhost:3000`, while the preview had been shared on port 3100. Started the preview on the configured origin, verified HTTP 200, and the user confirmed a fresh Google sign-in opens the dashboard. Start future local authentication previews at `localhost:3000` unless the callback configuration is intentionally updated too.
+
 - [x] Removed the newly added website-wide light/dark switch at the user's request. Restored original landing/login/404 colors and the pre-existing dashboard-only appearance settings. Removed shared theme components and overrides; the reusable canyon 404 remains.
 
 - [x] User-supplied canyon/cactus 404 adapted as reusable `utils/Canyon404.tsx`, with a thin `app/not-found.tsx` route, requested Oops message, working landing link and reduced-motion-aware parallax. Added permanent reusable-component placement rules to AGENTS.md. Shared light/dark/system preference now drives landing, authentication, 404 and dashboard themes; the dashboard selector and global switch synchronize. TypeScript/build passed, and the unknown-route page and theme attributes were verified in-browser without mobile overflow.
@@ -50,7 +54,9 @@ Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [imp
 
 **Reusable UI rule:** Keep reusable components under `utils/`; route files import them. New valid routes automatically replace the unknown-route fallback. Website-wide theme switching has been removed by user direction; no shared-theme follow-up remains.
 
-**Authentication UI follow-up:** Verify Google OAuth with a real user account after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
+**Dashboard verification follow-up:** Inspect the redesigned authenticated workspace on desktop and mobile at `http://localhost:3000/`, including Sources, Review, Versions and Settings. Code review/build checks do not certify visual reference fidelity or repeat backend workflow coverage.
+
+**Authentication UI follow-up:** The user confirmed Google OAuth opens the dashboard on `localhost:3000` after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
 
 **Current user-directed design work — 9 November:** The refined local landing implementation is available at `/landing`, including original terrain, circular exit, text choreography and mobile dock. It remains a reference-inspired approximation: the reference's detailed materials/lighting, media distortion, asymmetric product showcase and full motion choreography are not reproduced exactly. Keep reference assets separate from shipping assets. Complete fidelity refinement, performance measurement and an unclipped desktop visual review before claiming the requested match. This work does not close any foundation/release checks below or authorize hosting.
 
