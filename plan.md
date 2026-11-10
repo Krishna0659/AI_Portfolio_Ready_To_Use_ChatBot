@@ -4,6 +4,8 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Removed the newly added website-wide light/dark switch at the user's request. Restored original landing/login/404 colors and the pre-existing dashboard-only appearance settings. Removed shared theme components and overrides; the reusable canyon 404 remains.
+
 - [x] User-supplied canyon/cactus 404 adapted as reusable `utils/Canyon404.tsx`, with a thin `app/not-found.tsx` route, requested Oops message, working landing link and reduced-motion-aware parallax. Added permanent reusable-component placement rules to AGENTS.md. Shared light/dark/system preference now drives landing, authentication, 404 and dashboard themes; the dashboard selector and global switch synchronize. TypeScript/build passed, and the unknown-route page and theme attributes were verified in-browser without mobile overflow.
 
 - [x] Login redesigned with reusable `utils/auth` components, original animated violet prism, frosted panel and landing typography. Google is the sole sign-in link; the local-login endpoint returns 410. Production build/TypeScript passed and 390px browser inspection found no overflow. Uilora full source was login-gated, so this is an original adaptation rather than imported source. Google OAuth completion was not repeated in this UI batch.
@@ -46,7 +48,7 @@ Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [imp
 
 ## 2. Plan to execute
 
-**Reusable UI rule:** Keep reusable components under `utils/`; route files import them. New valid routes automatically replace the unknown-route fallback. Finish authenticated dashboard visual verification for the shared theme with a signed-in account.
+**Reusable UI rule:** Keep reusable components under `utils/`; route files import them. New valid routes automatically replace the unknown-route fallback. Website-wide theme switching has been removed by user direction; no shared-theme follow-up remains.
 
 **Authentication UI follow-up:** Verify Google OAuth with a real user account after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
 
