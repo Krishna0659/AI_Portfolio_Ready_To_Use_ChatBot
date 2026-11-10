@@ -4,6 +4,8 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Login redesigned with reusable `utils/auth` components, original animated violet prism, frosted panel and landing typography. Google is the sole sign-in link; the local-login endpoint returns 410. Production build/TypeScript passed and 390px browser inspection found no overflow. Uilora full source was login-gated, so this is an original adaptation rather than imported source. Google OAuth completion was not repeated in this UI batch.
+
 - [x] 10 November: added the asymmetric, clearly labeled illustrative product showcase and scroll-linked presentation. Production build and TypeScript passed; `/landing` opened on local port 3100 without browser console errors. Local preview left running at the user's request. Landing files and their dependencies prepared as a separate Git commit; unrelated worker/auth changes remain outside it. Exact reference fidelity remains a limitation, not a passed acceptance claim.
 
 - [x] Landing refinement: replaced repeated cone scenery with continuous river terrain, instanced curved grass and an architectural gateway; added reusable `scenery.ts` and `StoryMotion.tsx`, GSAP scroll-linked text and a circular exit, plus a mobile dock with Escape/focus return. Reduced-motion mode removes animations and the transition spacer. TypeScript and the final production build passed; mobile scene/menu/Escape, chapter movement and exit were inspected in-browser with no logged errors. Desktop DOM at 1440px showed no horizontal overflow and headline bounds inside the viewport. Focused code review found no material fixes; full desktop screenshot and exact-reference acceptance remain open.
@@ -41,6 +43,8 @@ These are verified local capabilities, not a declaration that any complete produ
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+**Authentication UI follow-up:** Verify Google OAuth with a real user account after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
 
 **Current user-directed design work — 9 November:** The refined local landing implementation is available at `/landing`, including original terrain, circular exit, text choreography and mobile dock. It remains a reference-inspired approximation: the reference's detailed materials/lighting, media distortion, asymmetric product showcase and full motion choreography are not reproduced exactly. Keep reference assets separate from shipping assets. Complete fidelity refinement, performance measurement and an unclipped desktop visual review before claiming the requested match. This work does not close any foundation/release checks below or authorize hosting.
 
