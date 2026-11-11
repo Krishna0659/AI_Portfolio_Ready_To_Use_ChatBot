@@ -1,7 +1,7 @@
 import {createCipheriv,createDecipheriv,randomBytes} from 'node:crypto';
 import {z} from 'zod';
 import * as oidc from 'openid-client';
-const flowSchema=z.object({verifier:z.string().min(32).max(256),nonce:z.string().min(16).max(256)}).strict();
+const flowSchema=z.object({verifier:z.string().min(32).max(256),nonce:z.string().min(16).max(256),reauth:z.object({user:z.uuid(),session:z.string().regex(/^[a-f0-9]{64}$/)}).strict().optional()}).strict();
 function key(){const value=process.env.OIDC_FLOW_KEY;if(!value||!/^[0-9a-f]{64}$/i.test(value))throw Error('Login encryption key is not configured');return Buffer.from(value,'hex');}
 export function sealFlow(flow:z.infer<typeof flowSchema>,state:string){
  const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key(),iv);cipher.setAAD(Buffer.from(state));const data=Buffer.concat([cipher.update(JSON.stringify(flowSchema.parse(flow)),'utf8'),cipher.final()]);return [iv,cipher.getAuthTag(),data].map(part=>part.toString('base64url')).join('.');
@@ -16,7 +16,7 @@ export function providerAuthTime(value:unknown,now=Date.now()){
 }
 export async function verifyGoogleCallback(config:oidc.Configuration,url:URL,flow:z.infer<typeof flowSchema>,state:string){
  oidc.enableNonRepudiationChecks(config);
- const tokens=await oidc.authorizationCodeGrant(config,url,{pkceCodeVerifier:flow.verifier,expectedState:state,expectedNonce:flow.nonce});
+ const tokens=await oidc.authorizationCodeGrant(config,url,{pkceCodeVerifier:flow.verifier,expectedState:state,expectedNonce:flow.nonce,...(flow.reauth?{maxAge:300}:{})});
  const claims=tokens.claims();if(!claims)throw Error('Missing identity token');
  return {issuer:claims.iss,subject:claims.sub,name:typeof claims.name==='string'?claims.name:'Portfolio owner',authenticatedAt:providerAuthTime(claims.auth_time)};
 }
