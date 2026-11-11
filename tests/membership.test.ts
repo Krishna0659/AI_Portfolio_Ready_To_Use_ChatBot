@@ -13,6 +13,7 @@ test('membership requires active tenant and member, and reserves mutations for o
  const read=()=>authorizedTransaction(tenant,user,false,async()=>true);
  assert.equal(await read(),true);await assert.rejects(authorizedTransaction(tenant,stranger,false,async()=>true),/Workspace not found/);
  await fixturePool.query("UPDATE memberships SET role='viewer' WHERE tenant_id=$1",[tenant]);assert.equal(await read(),true);await assert.rejects(authorizedTransaction(tenant,user,true,async()=>true),/Only the workspace owner/);
+ await assert.rejects(authorizedTransaction(tenant,user,false,db=>db.query("INSERT INTO drafts(tenant_id,content) VALUES($1,'{}')",[tenant])),/row-level security/);
  await fixturePool.query('UPDATE memberships SET active=false WHERE tenant_id=$1',[tenant]);await assert.rejects(read(),/Workspace not found/);
  await fixturePool.query("UPDATE memberships SET active=true,role='owner' WHERE tenant_id=$1",[tenant]);await fixturePool.query('UPDATE workspaces SET active=false WHERE id=$1',[tenant]);await assert.rejects(read(),/Workspace not found/);
  assert.equal((await pool.query("SELECT nullif(current_setting('app.user_id',true),'') actor")).rows[0].actor,null);

@@ -9,7 +9,7 @@ export async function login(issuer:string,subject:string,name:string,authenticat
  const db=await pool.connect();try{await db.query('BEGIN');
  const account=await db.query('INSERT INTO accounts(id,issuer,subject,name) VALUES($1,$2,$3,$4) ON CONFLICT(issuer,subject) DO UPDATE SET name=excluded.name RETURNING id',[randomUUID(),issuer,subject,name]);const user=account.rows[0].id;
  const workspace=await db.query('INSERT INTO workspaces(id,owner_id) VALUES($1,$2) ON CONFLICT(owner_id) DO UPDATE SET name=workspaces.name RETURNING id',[randomUUID(),user]);const tenant=workspace.rows[0].id;
- await db.query("SELECT set_config('app.tenant_id',$1,true)",[tenant]);await db.query('INSERT INTO drafts(tenant_id,content) VALUES($1,$2) ON CONFLICT DO NOTHING',[tenant,emptyProfile]);
+ await db.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)",[tenant,user]);await db.query('INSERT INTO drafts(tenant_id,content) VALUES($1,$2) ON CONFLICT DO NOTHING',[tenant,emptyProfile]);
  if(previous)await db.query('DELETE FROM sessions WHERE token_hash=$1 AND user_id=$2',[digest(previous),user]);
  await db.query('INSERT INTO sessions(token_hash,user_id,csrf,authenticated_at) VALUES($1,$2,$3,$4)',[digest(token),user,csrf,issuer==='local-development'?new Date():authenticatedAt]);await db.query('COMMIT');
  }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}

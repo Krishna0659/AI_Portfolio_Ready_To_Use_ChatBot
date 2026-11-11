@@ -2,7 +2,7 @@ import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {unlink,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import type {PoolClient} from 'pg';
-import {pool,transaction,identityTransaction} from '../db';
+import {pool,transaction,identityTransaction,workerPool} from '../db';
 import {requireMembership} from './authorization';
 
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
@@ -43,7 +43,7 @@ export async function deletionStatus(receipt:string){
  const result=await pool.query('SELECT status,created_at,completed_at FROM deletion_requests WHERE receipt_hash=$1',[digest(receipt)]);return result.rows[0]??null;
 }
 export async function cleanupOne(remove:(file:string)=>Promise<void>=unlink,requestId:string|null=null){
- const db=await pool.connect();let job;
+ const pool=workerPool;const db=await pool.connect();let job;
  try{await db.query('BEGIN');const r=await db.query("SELECT * FROM object_deletions WHERE available_at<=now() AND (lease_until IS NULL OR lease_until<now()) AND ($1::uuid IS NULL OR request_id=$1) ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1",[requestId]);job=r.rows[0];if(job){job.lease=randomUUID();await db.query("UPDATE object_deletions SET lease=$2,lease_until=now()+interval '30 seconds',attempt=attempt+1 WHERE id=$1",[job.id,job.lease]);}await db.query('COMMIT');}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
  if(!job)return false;
  try{

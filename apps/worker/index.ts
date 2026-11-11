@@ -1,15 +1,16 @@
 import {readFile} from 'node:fs/promises';
-import {pool,transaction} from '../../packages/db/index';
+import {workerPool as pool} from '../../packages/db/index';
 import {fetchPublic,githubReadme} from '../../services/fetch-broker/fetch';
 import {ownerAppEnabled,ownerReadme} from '../../services/github/app';
 import {cleanupOne,objectPath} from '../../packages/domain/lifecycle';
 import {claimJob,heartbeat,completeJob,failJob} from '../../packages/domain/jobs';
 import {parse} from '../../services/extraction';
 process.loadEnvFile('.env.local');
+if(!process.env.WORKER_DATABASE_URL)throw Error('WORKER_DATABASE_URL is required for the worker');
 let stopped=false;process.on('SIGINT',()=>stopped=true);process.on('SIGTERM',()=>stopped=true);
 // One job per tenant per pass; separate identity/worker database roles remain a release gate.
 async function tick(){
- await cleanupOne();const tenants=await pool.query('SELECT id FROM workspaces ORDER BY id');
+ await cleanupOne();const tenants=await pool.query('SELECT worker_tenants() AS id');
  for(const {id:tenant} of tenants.rows){
   if(stopped)break;const authenticatedGithub=ownerAppEnabled(tenant),job=await claimJob(tenant,authenticatedGithub);
   if(job){let heartbeatPending:Promise<void>|null=null;
@@ -23,7 +24,7 @@ async function tick(){
    }catch(error){await failJob(job,error,authenticatedGithub);}
    finally{clearInterval(timer);await heartbeatPending;}
   }
-  await transaction(tenant,async db=>{await db.query("UPDATE events SET status='mock_succeeded' WHERE status='pending' AND mode='mock'");});
+  await pool.query('SELECT worker_ack_mock($1)',[tenant]);
  }
 }
 console.log('PortfolioAI worker running');
