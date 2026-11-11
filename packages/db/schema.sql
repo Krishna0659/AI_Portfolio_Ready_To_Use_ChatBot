@@ -22,12 +22,17 @@ CREATE TABLE IF NOT EXISTS jobs(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFE
 CREATE UNIQUE INDEX IF NOT EXISTS one_job_per_source ON jobs(source_id) WHERE status IN ('queued','running');
 CREATE TABLE IF NOT EXISTS snapshots(id uuid PRIMARY KEY,tenant_id uuid NOT NULL,source_id uuid NOT NULL,job_id uuid NOT NULL,text text NOT NULL,content_hash text NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),FOREIGN KEY(tenant_id,source_id) REFERENCES sources(tenant_id,id) ON DELETE CASCADE,FOREIGN KEY(tenant_id,job_id) REFERENCES jobs(tenant_id,id) ON DELETE CASCADE,UNIQUE(tenant_id,id));
 CREATE TABLE IF NOT EXISTS versions(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES workspaces ON DELETE CASCADE,number integer NOT NULL,content jsonb NOT NULL,content_hash text NOT NULL,markdown text NOT NULL,draft_revision integer NOT NULL,approved_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,number), UNIQUE(tenant_id,id));
-CREATE TABLE IF NOT EXISTS approvals(tenant_id uuid NOT NULL,version_id uuid PRIMARY KEY,content_hash text NOT NULL,actor_id uuid NOT NULL REFERENCES accounts,FOREIGN KEY(tenant_id,version_id) REFERENCES versions(tenant_id,id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS approvals(tenant_id uuid NOT NULL,version_id uuid PRIMARY KEY,draft_revision integer NOT NULL DEFAULT 1,content_hash text NOT NULL,actor_id uuid NOT NULL REFERENCES accounts,partial_ack boolean NOT NULL DEFAULT false,publish_consent boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),FOREIGN KEY(tenant_id,version_id) REFERENCES versions(tenant_id,id) ON DELETE CASCADE);
+ALTER TABLE approvals ADD COLUMN IF NOT EXISTS draft_revision integer NOT NULL DEFAULT 1;
+ALTER TABLE approvals ADD COLUMN IF NOT EXISTS partial_ack boolean NOT NULL DEFAULT false;
+ALTER TABLE approvals ADD COLUMN IF NOT EXISTS publish_consent boolean NOT NULL DEFAULT false;
+ALTER TABLE approvals ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+CREATE TABLE IF NOT EXISTS version_evidence(tenant_id uuid NOT NULL REFERENCES workspaces ON DELETE CASCADE,version_id uuid NOT NULL,fact_id uuid NOT NULL,snapshot_id uuid NOT NULL,source_id uuid NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(tenant_id,version_id,fact_id,snapshot_id),FOREIGN KEY(tenant_id,version_id) REFERENCES versions(tenant_id,id) ON DELETE CASCADE,FOREIGN KEY(tenant_id,snapshot_id) REFERENCES snapshots(tenant_id,id) ON DELETE CASCADE,FOREIGN KEY(tenant_id,source_id) REFERENCES sources(tenant_id,id) ON DELETE CASCADE);
 CREATE TABLE IF NOT EXISTS events(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES workspaces ON DELETE CASCADE,version_id uuid,generation integer NOT NULL,mode text NOT NULL CHECK(mode IN ('disabled','mock')),status text NOT NULL CHECK(status IN ('blocked_configuration','pending','mock_succeeded','superseded')),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(tenant_id,generation),FOREIGN KEY(tenant_id,version_id) REFERENCES versions(tenant_id,id) ON DELETE CASCADE);
 CREATE TABLE IF NOT EXISTS audit(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES workspaces ON DELETE CASCADE,action text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS idempotency(tenant_id uuid NOT NULL REFERENCES workspaces ON DELETE CASCADE,key text NOT NULL,request_hash text NOT NULL,response jsonb NOT NULL,PRIMARY KEY(tenant_id,key));
 DO $$ DECLARE t text; BEGIN
-FOREACH t IN ARRAY ARRAY['drafts','sources','jobs','snapshots','versions','approvals','events','audit','idempotency'] LOOP
+FOREACH t IN ARRAY ARRAY['drafts','sources','jobs','snapshots','versions','approvals','version_evidence','events','audit','idempotency'] LOOP
 EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY',t);
 EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY',t);
 IF NOT EXISTS(SELECT 1 FROM pg_policies WHERE tablename=t AND policyname='tenant_isolation') THEN
@@ -36,3 +41,22 @@ END IF; END LOOP; END $$;
 CREATE OR REPLACE FUNCTION immutable_version() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Approved versions cannot be edited'; END $$;
 DROP TRIGGER IF EXISTS protect_version ON versions;
 CREATE TRIGGER protect_version BEFORE UPDATE ON versions FOR EACH ROW EXECUTE FUNCTION immutable_version();
+CREATE OR REPLACE FUNCTION immutable_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Approved records cannot be edited'; END $$;
+DROP TRIGGER IF EXISTS protect_approval ON approvals;
+CREATE TRIGGER protect_approval BEFORE UPDATE ON approvals FOR EACH ROW EXECUTE FUNCTION immutable_approval();
+CREATE OR REPLACE FUNCTION immutable_version_evidence() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Version evidence cannot be edited'; END $$;
+DROP TRIGGER IF EXISTS protect_version_evidence ON version_evidence;
+CREATE TRIGGER protect_version_evidence BEFORE UPDATE ON version_evidence FOR EACH ROW EXECUTE FUNCTION immutable_version_evidence();
+CREATE OR REPLACE FUNCTION protect_audit_log() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    RAISE EXCEPTION 'Audit log entries are immutable and cannot be updated';
+  ELSIF TG_OP = 'DELETE' THEN
+    IF current_user = 'portfolio_runtime' THEN
+      RAISE EXCEPTION 'Audit log is append-only and cannot be deleted by runtime';
+    END IF;
+  END IF;
+  RETURN OLD;
+END $$;
+DROP TRIGGER IF EXISTS protect_audit ON audit;
+CREATE TRIGGER protect_audit BEFORE UPDATE OR DELETE ON audit FOR EACH ROW EXECUTE FUNCTION protect_audit_log();
