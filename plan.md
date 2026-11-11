@@ -1,6 +1,6 @@
 # PortfolioAI working plan
 
-Last updated: 10 November 2026 (Asia/Calcutta).
+Last updated: 11 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
@@ -8,9 +8,9 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 
 - [x] Resolved the local sign-in connection issue: Google returns to the configured `http://localhost:3000`, while the preview had been shared on port 3100. Started the preview on the configured origin, verified HTTP 200, and the user confirmed a fresh Google sign-in opens the dashboard. Start future local authentication previews at `localhost:3000` unless the callback configuration is intentionally updated too.
 
-- [x] Removed the newly added website-wide light/dark switch at the user's request. Restored original landing/login/404 colors and the pre-existing dashboard-only appearance settings. Removed shared theme components and overrides; the reusable canyon 404 remains.
+- [x] Removed the newly added website-wide light/dark switch at the user's request. Restored the original landing/login/404 colors and removed the remaining dashboard theme selector/effect as part of the later Paper Glass dashboard pass. The reusable canyon 404 remains.
 
-- [x] User-supplied canyon/cactus 404 adapted as reusable `utils/Canyon404.tsx`, with a thin `app/not-found.tsx` route, requested Oops message, working landing link and reduced-motion-aware parallax. Added permanent reusable-component placement rules to AGENTS.md. Shared light/dark/system preference now drives landing, authentication, 404 and dashboard themes; the dashboard selector and global switch synchronize. TypeScript/build passed, and the unknown-route page and theme attributes were verified in-browser without mobile overflow.
+- [x] User-supplied canyon/cactus 404 adapted as reusable `utils/Canyon404.tsx`, with a thin `app/not-found.tsx` route, requested Oops message, working landing link and reduced-motion-aware parallax. Added permanent reusable-component placement rules to AGENTS.md. TypeScript/build passed, and the unknown-route page was verified in-browser without mobile overflow.
 
 - [x] Login redesigned with reusable `utils/auth` components, original animated violet prism, frosted panel and landing typography. Google is the sole sign-in link; the local-login endpoint returns 410. Production build/TypeScript passed and 390px browser inspection found no overflow. Uilora full source was login-gated, so this is an original adaptation rather than imported source. Google OAuth completion was not repeated in this UI batch.
 
@@ -25,7 +25,7 @@ Last updated: 10 November 2026 (Asia/Calcutta).
 These are verified local capabilities, not a declaration that any complete production phase has passed. Work already spans several phases of the website PRD. **Phase 1 remains open** pending the checks and passkey work listed in section 2.
 
 - [x] Repository, Next.js/React dashboard, PostgreSQL persistence and separate runtime database role.
-- [x] Dense responsive workspace with working light, dark and system themes; saved preferences and document-input warning fixes.
+- [x] Dense responsive workspace with saved preferences and document-input warning fixes. The later user-directed dashboard pass removed the workspace light/dark/system selector and website-wide theme switching.
 - [x] Local development login and Google sign-in verified with two accounts, each with a separate workspace. Existing imports remain in the local development workspace.
 - [x] Hashed sessions, CSRF protection, idle/absolute expiry, encrypted temporary login data and validated Google callbacks. Safe error references added; an earlier second-account error did not recur after a fresh attempt, and its original cause remains unconfirmed.
 - [x] Tenant isolation on content tables, with real-database isolation tests.
