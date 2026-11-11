@@ -1,4 +1,14 @@
-# Verification — 1 November 2026
+# Verification
+
+## Current foundation evidence — 11 November 2026
+
+- User confirmed real Google confirmation, passkey enrollment and passkey verification succeeded after 1b856ca.
+- All 33 local tests, TypeScript and production build passed for that change.
+- [Foundation CI](https://github.com/Krishna0659/AI_Portfolio_Ready_To_Use_ChatBot/actions/runs/43052895611) passed for 1b856ca, including dependency/credential checks and the disposable Linux/PostgreSQL build, API, membership and worker suite.
+- Local API and membership acceptance checks passed again. Local worker started successfully.
+- Live authenticated GitHub import and redesigned dashboard browser acceptance remain open. The old GitHub verification script uses the disabled local-login endpoint and must be replaced before reuse.
+
+## Historical evidence — 1 November 2026
 
 Executed against the local Next.js app and PostgreSQL runtime role:
 

@@ -1,5 +1,7 @@
 # Phase 1 implementation status
 
+Current update (11 November 2026): Google is the only sign-in method; the public local-login endpoint is disabled and theme switching has been removed. Passkey enrollment uses a five-minute, one-use Google account-access confirmation bound to the existing session. Sensitive actions for Google accounts require passkey verification. The user confirmed the real Google/enrollment/verification sequence succeeds. Commit 1b856ca passed foundation CI and 33 local tests; local API/membership checks also passed and the worker was started. Fresh authenticated GitHub import and dashboard browser acceptance remain outstanding, so Phase 1 is not closed. Older implementation details below describe historical behavior where superseded by this update.
+
 This is a functioning local development implementation, not completion of the full production specification. Hosting is intentionally deferred. No Phase 2 indexing or Phase 3 inference is implemented.
 
 ## Implemented
