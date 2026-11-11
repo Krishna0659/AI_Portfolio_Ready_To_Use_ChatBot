@@ -4,6 +4,8 @@ Last updated: 11 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Added identity-only passkey credential storage and session-bound, five-minute, one-use challenges. Applied the additive local migration. All 30 local automated tests and TypeScript passed, including wrong-account/session/purpose rejection, concurrent replay rejection, expiry, session cascade cleanup and web/worker role denial. This is storage/challenge infrastructure only: no passkey enrollment endpoint, signature verification, UI or recent-authentication grant is enabled yet.
+
 - [x] 11 November fresh Linux/PostgreSQL 17 suite exited successfully: 29 automated tests, 7 parser tests, TypeScript, production build and built-server API/membership checks passed. npm installation audit reported zero vulnerabilities. Regenerated mismatched disposable credentials after the first setup attempt failed; no live credentials or user database were changed. Pinned SimpleWebAuthn dependencies included in the tested dependency batch; enrollment and verification remain unimplemented.
 
 - [x] Worker and membership enforcement batch committed and pushed as `14e5862` on `landing/portfolioai-2026-11-10`. This supersedes the earlier note that those policy changes were uncommitted. Passkey dependencies remain preparation only; passkey implementation is still open.
@@ -63,6 +65,8 @@ Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [imp
 **Dashboard verification follow-up:** Inspect the redesigned authenticated workspace on desktop and mobile at `http://localhost:3000/`, including Sources, Review, Versions and Settings. Code review/build checks do not certify visual reference fidelity or repeat backend workflow coverage.
 
 **Authentication UI follow-up:** The user confirmed Google OAuth opens the dashboard on `localhost:3000` after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
+
+**Passkey implementation next:** Connect the tested challenge store to account-bound fresh Google verification, registration/authentication cryptographic verification, Settings controls, and short-lived recent-authentication grants. Then test failure cases and real Windows Hello enrollment; the storage migration alone does not close Phase 1.
 
 **Current user-directed design work — 9 November:** The refined local landing implementation is available at `/landing`, including original terrain, circular exit, text choreography and mobile dock. It remains a reference-inspired approximation: the reference's detailed materials/lighting, media distortion, asymmetric product showcase and full motion choreography are not reproduced exactly. Keep reference assets separate from shipping assets. Complete fidelity refinement, performance measurement and an unclipped desktop visual review before claiming the requested match. This work does not close any foundation/release checks below or authorize hosting.
 

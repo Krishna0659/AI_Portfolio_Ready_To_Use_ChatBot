@@ -28,6 +28,7 @@ if(process.env.IDENTITY_DATABASE_URL){
  await db.query('REVOKE INSERT,UPDATE,DELETE ON workspaces,memberships FROM portfolio_runtime');
 }
 await db.query(await readFile('packages/db/tenancy.sql','utf8'));
+await db.query(await readFile('packages/db/passkeys.sql','utf8'));
 if(process.env.WORKER_DATABASE_URL){
  const url=new URL(process.env.WORKER_DATABASE_URL),secret=url.password;
  if(url.username!=='portfolio_worker'||!/^[a-f0-9]{48}$/.test(secret))throw Error('Invalid worker role configuration');
