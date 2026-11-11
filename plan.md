@@ -4,6 +4,8 @@ Last updated: 11 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Authenticated Chrome check: Settings, Sources and Review opened in the Krishna Gaur Google workspace. Added the authorized PaySure repository through the dashboard; worker attempted ingestion and correctly surfaced shared public GitHub quota exhaustion with automatic retry. No evidence persistence success claimed. The Google workspace is not the configured GitHub App workspace; asked the user whether to transfer the existing binding from the older local-development workspace. Desktop review at the current window size is partial; mobile and full navigation checks remain open.
+
 - [x] Replaced the obsolete local-login-dependent GitHub verifier with explicit repository arguments and live workspace-bound GitHub App authorization/README parsing. Both previously authorized repositories passed: PaySure 24,570 characters; Text-Summazrizer 36 characters. TypeScript passed. No sessions, drafts, jobs or sources were modified. This verifies the provider/parser path; dashboard-triggered persistence remains a separate acceptance check.
 
 - [x] 11 November acceptance follow-up: user confirmed Verify with Google → Add a passkey → Verify with passkey succeeds on the real device. CI for 1b856ca passed: https://github.com/Krishna0659/AI_Portfolio_Ready_To_Use_ChatBot/actions/runs/43052895611 . Local API workflows and owner/viewer/revoked-member/disabled-workspace checks passed again. Started the local worker successfully with its restricted database role. Live GitHub acceptance remains open: the old verification script depends on disabled local login and cannot be counted as current evidence.
