@@ -16,7 +16,7 @@ export function providerAuthTime(value:unknown,now=Date.now()){
 }
 export async function verifyGoogleCallback(config:oidc.Configuration,url:URL,flow:z.infer<typeof flowSchema>,state:string){
  oidc.enableNonRepudiationChecks(config);
- const tokens=await oidc.authorizationCodeGrant(config,url,{pkceCodeVerifier:flow.verifier,expectedState:state,expectedNonce:flow.nonce,...(flow.reauth?{maxAge:300}:{})});
+ const tokens=await oidc.authorizationCodeGrant(config,url,{pkceCodeVerifier:flow.verifier,expectedState:state,expectedNonce:flow.nonce});
  const claims=tokens.claims();if(!claims)throw Error('Missing identity token');
  return {issuer:claims.iss,subject:claims.sub,name:typeof claims.name==='string'?claims.name:'Portfolio owner',authenticatedAt:providerAuthTime(claims.auth_time)};
 }

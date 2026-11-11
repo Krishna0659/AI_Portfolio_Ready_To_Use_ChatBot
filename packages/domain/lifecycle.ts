@@ -12,7 +12,7 @@ export function objectPath(key:string){
 }
 export async function recentSession(db:PoolClient,user:string,tokenHash:string){
  const r=await db.query('SELECT session_recent($1,$2) recent',[tokenHash,user]);
- if(!r.rows[0].recent)throw Object.assign(Error('Sign in again with a verified recent Google authentication time, or verify with your passkey in Settings before deleting data.'),{status:403});
+ if(!r.rows[0].recent)throw Object.assign(Error('Verify with your passkey in Settings before deleting data.'),{status:403});
 }
 export async function queueErasure(db:PoolClient,tenant:string,user:string,source:string|null,keys:string[]){
  // Serialize receipt creation and completion across every deletion for one account.

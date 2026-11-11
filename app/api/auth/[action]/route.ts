@@ -18,7 +18,7 @@ export async function GET(req:Request,{params}:{params:Promise<{action:string}>}
   await pool.query('DELETE FROM auth_flows WHERE expires_at<=now()');
   await pool.query('INSERT INTO auth_flows(state,verifier,nonce) VALUES($1,$2,$3)',[state,sealFlow({verifier,nonce,reauth},state),'sealed-v1']);
   (await cookies()).set('oidc_state',state,{httpOnly:true,sameSite:'lax',secure:process.env.APP_ORIGIN?.startsWith('https:'),path:'/',maxAge:600});
-  return NextResponse.redirect(oidc.buildAuthorizationUrl(c,{redirect_uri:process.env.APP_ORIGIN+'/api/auth/callback',scope:'openid email profile',prompt:'select_account',...(reauth?{max_age:'300'}:{}),claims:JSON.stringify({id_token:{auth_time:{essential:true}}}),state,nonce,code_challenge:await oidc.calculatePKCECodeChallenge(verifier),code_challenge_method:'S256'}));
+  return NextResponse.redirect(oidc.buildAuthorizationUrl(c,{redirect_uri:process.env.APP_ORIGIN+'/api/auth/callback',scope:'openid email profile',prompt:'select_account',state,nonce,code_challenge:await oidc.calculatePKCECodeChallenge(verifier),code_challenge_method:'S256'}));
  }
  if(action==='callback'){
   stage='state';const url=new URL(req.url),state=url.searchParams.get('state');

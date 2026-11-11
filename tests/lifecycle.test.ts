@@ -17,11 +17,11 @@ test('account erasure is fenced, revokes sessions, and waits for durable source 
  await fixturePool.query("INSERT INTO sessions(token_hash,user_id,csrf,created_at) VALUES($1,$2,'fixture',now()-interval '11 minutes')",[tokenHash,user]);
  await transaction(tenant,async db=>{await db.query('INSERT INTO drafts(tenant_id,content) VALUES($1,$2)',[tenant,emptyProfile]);await db.query("INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,'upload','Fixture',$3)",[source,tenant,key]);await db.query("INSERT INTO jobs(id,tenant_id,source_id,status,lease,lease_until) VALUES($1,$2,$3,'running',$4,now()+interval '1 minute')",[job,tenant,source,randomUUID()]);});
  await mkdir('.local/objects',{recursive:true});await writeFile(objectPath(key),'Disposable lifecycle fixture');
- await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);assert.equal((await fixturePool.query('SELECT id FROM accounts WHERE id=$1',[user])).rowCount,1);
+ await assert.rejects(eraseAccount(tenant,user,tokenHash),/Verify with your passkey/);assert.equal((await fixturePool.query('SELECT id FROM accounts WHERE id=$1',[user])).rowCount,1);
  await fixturePool.query('UPDATE sessions SET created_at=now() WHERE token_hash=$1',[tokenHash]);
- await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);
+ await assert.rejects(eraseAccount(tenant,user,tokenHash),/Verify with your passkey/);
  await fixturePool.query("UPDATE sessions SET authenticated_at=now()-interval '11 minutes' WHERE token_hash=$1",[tokenHash]);
- await assert.rejects(eraseAccount(tenant,user,tokenHash),/Sign in again/);
+ await assert.rejects(eraseAccount(tenant,user,tokenHash),/Verify with your passkey/);
  await fixturePool.query('UPDATE sessions SET authenticated_at=now() WHERE token_hash=$1',[tokenHash]);
  await assert.rejects(eraseAccount(randomUUID(),user,tokenHash),/Workspace not found/);
  const pending=await transaction(tenant,async db=>{const receipt=await queueErasure(db,tenant,user,source,[key]);await db.query('DELETE FROM sources WHERE id=$1',[source]);return receipt;});requestId=pending.requestId;

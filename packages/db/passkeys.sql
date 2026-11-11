@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS passkey_challenges (
 REVOKE ALL ON passkeys,passkey_challenges FROM PUBLIC,portfolio_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON passkeys,passkey_challenges TO portfolio_identity;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS passkey_verified_at timestamptz;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS passkey_enrollment_verified_at timestamptz;
 CREATE OR REPLACE FUNCTION public.session_recent(token text,actor uuid) RETURNS boolean
 LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
  SELECT EXISTS(SELECT 1 FROM public.sessions WHERE token_hash=token AND user_id=actor
  AND expires_at>now() AND absolute_expires_at>now() AND (
  (passkey_verified_at>now()-interval '5 minutes' AND passkey_verified_at<=now()) OR
- (created_at>now()-interval '10 minutes' AND authenticated_at>now()-interval '10 minutes' AND authenticated_at<=now()+interval '1 minute')));
+ (EXISTS(SELECT 1 FROM public.accounts a WHERE a.id=user_id AND a.issuer<>'https://accounts.google.com')
+ AND created_at>now()-interval '10 minutes' AND authenticated_at>now()-interval '10 minutes' AND authenticated_at<=now()+interval '1 minute')));
 $$;

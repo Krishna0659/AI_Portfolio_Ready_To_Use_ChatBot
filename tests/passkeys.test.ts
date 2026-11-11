@@ -12,9 +12,12 @@ test('enrollment requires fresh Google proof, preserves challenge encoding, reje
  try{
   await fixturePool.query("INSERT INTO accounts(id,issuer,subject,name) VALUES($1,'https://accounts.google.com',$2,'Test')",[user,user]);
   await fixturePool.query("INSERT INTO sessions(token_hash,user_id,csrf,created_at) VALUES($1,$2,'fixture',now()-interval '1 hour')",[token,user]);
-  await assert.rejects(passkeyOptions(actor,'register'),/verified recent/);
+  await assert.rejects(passkeyOptions(actor,'register'),/Verify with Google/);
   await assert.rejects(passkeyOptions(actor,'verify'),/Add a passkey/);
-  await fixturePool.query('UPDATE sessions SET authenticated_at=now() WHERE token_hash=$1',[token]);
+  await fixturePool.query('UPDATE sessions SET passkey_enrollment_verified_at=now() WHERE token_hash=$1',[token]);
+  await fixturePool.query("UPDATE sessions SET passkey_enrollment_verified_at=now()-interval '6 minutes' WHERE token_hash=$1",[token]);
+  await assert.rejects(passkeyOptions(actor,'register'),/Verify with Google/);
+  await fixturePool.query('UPDATE sessions SET passkey_enrollment_verified_at=now() WHERE token_hash=$1',[token]);
   const options=await passkeyOptions(actor,'register');
   assert.equal(options.challenge,await consumePasskeyChallenge(token,user,'register'));
   await passkeyOptions(actor,'register');
@@ -35,6 +38,7 @@ test('enrollment requires fresh Google proof, preserves challenge encoding, reje
   const stored=(await fixturePool.query('SELECT user_id,public_key,counter FROM passkeys WHERE id=$1',[id])).rows[0];
   assert.equal(stored.user_id,user);assert.deepEqual(stored.public_key,cose);assert.equal(Number(stored.counter),0);
   assert.equal(await recent(),false,'registration alone must not grant sensitive-action verification');
+  await assert.rejects(passkeyOptions(actor,'register'),/Verify with Google/);
   await assert.rejects(finishPasskey(actor,'register',registration));
   for(const fault of ['origin','rp','signature','user-verification','user-presence','user-handle','challenge','credential']){
    const challenge=(await passkeyOptions(actor,'verify')).challenge;

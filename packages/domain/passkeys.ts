@@ -10,8 +10,8 @@ async function freshGoogle(actor:Actor){
  const r=await identityPool.query(`SELECT 1 FROM sessions s JOIN accounts a ON a.id=s.user_id
  WHERE s.token_hash=$1 AND s.user_id=$2 AND a.issuer='https://accounts.google.com'
  AND s.expires_at>now() AND s.absolute_expires_at>now()
- AND s.authenticated_at>now()-interval '5 minutes' AND s.authenticated_at<=now()+interval '1 minute'`,[actor.token_hash,actor.user_id]);
- if(!r.rowCount)throw Object.assign(Error('Sign in again with Google before adding a passkey. A verified recent authentication time is required.'),{status:403});
+ AND s.passkey_enrollment_verified_at>now()-interval '5 minutes' AND s.passkey_enrollment_verified_at<=now()`,[actor.token_hash,actor.user_id]);
+ if(!r.rowCount)throw Object.assign(Error('Choose Verify with Google in Settings, use the same account, then add your passkey within five minutes.'),{status:403});
 }
 export async function passkeyOptions(actor:Actor,purpose:'register'|'verify'){
  if(purpose==='register')await freshGoogle(actor);
@@ -34,7 +34,7 @@ export async function finishPasskey(actor:Actor,purpose:'register'|'verify',resp
   const db=await identityPool.connect();try{
    await db.query('BEGIN');
    await db.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[actor.user_id]);
-   const active=await db.query('SELECT 1 FROM sessions WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND absolute_expires_at>now() FOR UPDATE',[actor.token_hash,actor.user_id]);
+   const active=await db.query("UPDATE sessions SET passkey_enrollment_verified_at=NULL WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND absolute_expires_at>now() AND passkey_enrollment_verified_at>now()-interval '5 minutes' AND passkey_enrollment_verified_at<=now() RETURNING token_hash",[actor.token_hash,actor.user_id]);
    if(!active.rowCount)throw denied();
    if(Number((await db.query('SELECT count(*) FROM passkeys WHERE user_id=$1',[actor.user_id])).rows[0].count)>=5)throw denied();
    await db.query('INSERT INTO passkeys(id,user_id,public_key,counter,transports) VALUES($1,$2,$3,$4,$5)',[c.id,actor.user_id,Buffer.from(c.publicKey),c.counter,c.transports??[]]);

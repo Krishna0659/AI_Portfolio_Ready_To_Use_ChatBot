@@ -16,6 +16,9 @@ function config(claimOverrides:Record<string,unknown>={},wrongSignature=false){
 }
 test('Google callback validates signatures, audience, issuer, nonce, expiry and state',async()=>{
  const identity=await verifyGoogleCallback(config(),callback,flow,state);assert.equal(identity.subject,'fixture-subject');assert.equal(identity.authenticatedAt,null);
+ const confirmationFlow={...flow,reauth:{user:'00000000-0000-4000-8000-000000000001',session:'a'.repeat(64)}};
+ assert.equal((await verifyGoogleCallback(config(),callback,confirmationFlow,state)).authenticatedAt,null);
+ await assert.rejects(verifyGoogleCallback(config({},true),callback,confirmationFlow,state));
  for(const claims of [{aud:'another-client'},{iss:'https://attacker.example'},{nonce:'replayed-nonce'},{exp:Math.floor(Date.now()/1000)-300}])await assert.rejects(verifyGoogleCallback(config(claims),callback,flow,state));
  await assert.rejects(verifyGoogleCallback(config({},true),callback,flow,state));await assert.rejects(verifyGoogleCallback(config(),callback,flow,'another-state'));
 });
