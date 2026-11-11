@@ -1,7 +1,7 @@
 name: Foundation checks
 on:
   push:
-    branches: [main]
+    branches: [main, landing/portfolioai-2026-11-10]
   pull_request:
 permissions:
   contents: read

@@ -25,7 +25,29 @@ test('enrollment requires fresh Google proof, preserves challenge encoding, reje
   assert.equal(await recent(),false);
   const key=generateKeyPairSync('ed25519'),jwk=key.publicKey.export({format:'jwk'}),id=randomBytes(24).toString('base64url');
   const cose=Buffer.concat([Buffer.from('a4010103272006215820','hex'),Buffer.from(jwk.x!,'base64url')]);
-  await fixturePool.query('INSERT INTO passkeys(id,user_id,public_key,counter) VALUES($1,$2,$3,0)',[id,user,cose]);
+  const registrationOptions=await passkeyOptions(actor,'register'),site=new URL(process.env.APP_ORIGIN!);
+  const credentialId=Buffer.from(id,'base64url');
+  const registrationData=Buffer.concat([createHash('sha256').update(site.hostname).digest(),Buffer.from([0x45,0,0,0,0]),Buffer.alloc(16),Buffer.from([0,credentialId.length]),credentialId,cose]);
+  // CBOR map: fmt="none", attStmt={}, authData=<bytes>. No device attestation is requested.
+  const attestation=Buffer.concat([Buffer.from('a363666d74646e6f6e656761747453746d74a068617574684461746158','hex'),Buffer.from([registrationData.length]),registrationData]);
+  const registration:RegistrationResponseJSON={id,rawId:id,type:'public-key',clientExtensionResults:{},response:{clientDataJSON:Buffer.from(JSON.stringify({type:'webauthn.create',challenge:registrationOptions.challenge,origin:site.origin})).toString('base64url'),attestationObject:attestation.toString('base64url')}};
+  await finishPasskey(actor,'register',registration);
+  const stored=(await fixturePool.query('SELECT user_id,public_key,counter FROM passkeys WHERE id=$1',[id])).rows[0];
+  assert.equal(stored.user_id,user);assert.deepEqual(stored.public_key,cose);assert.equal(Number(stored.counter),0);
+  assert.equal(await recent(),false,'registration alone must not grant sensitive-action verification');
+  await assert.rejects(finishPasskey(actor,'register',registration));
+  for(const fault of ['origin','rp','signature','user-verification','user-presence','user-handle','challenge','credential']){
+   const challenge=(await passkeyOptions(actor,'verify')).challenge;
+   const client=Buffer.from(JSON.stringify({type:'webauthn.get',challenge:fault==='challenge'?'wrong':challenge,origin:fault==='origin'?'https://foreign.example':site.origin}));
+   const authenticator=Buffer.concat([createHash('sha256').update(fault==='rp'?'foreign.example':site.hostname).digest(),Buffer.from([fault==='user-verification'?1:fault==='user-presence'?4:5,0,0,0,1])]);
+   const signed=sign(null,Buffer.concat([authenticator,createHash('sha256').update(client).digest()]),key.privateKey);
+   if(fault==='signature')signed[0]^=1;
+   const response:AuthenticationResponseJSON={id:fault==='credential'?'foreign':id,rawId:id,type:'public-key',clientExtensionResults:{},response:{clientDataJSON:client.toString('base64url'),authenticatorData:authenticator.toString('base64url'),signature:signed.toString('base64url'),userHandle:Buffer.from(fault==='user-handle'?'foreign':user).toString('base64url')}};
+   await assert.rejects(finishPasskey(actor,'verify',response),fault);
+   assert.equal(await recent(),false,fault+' must not grant verification');
+   assert.equal(Number((await fixturePool.query('SELECT counter FROM passkeys WHERE id=$1',[id])).rows[0].counter),0);
+   await assert.rejects(consumePasskeyChallenge(token,user,'verify'));
+  }
   const assertionOptions=await passkeyOptions(actor,'verify'),origin=new URL(process.env.APP_ORIGIN!);
   const clientData=Buffer.from(JSON.stringify({type:'webauthn.get',challenge:assertionOptions.challenge,origin:origin.origin}));
   const authData=Buffer.concat([createHash('sha256').update(origin.hostname).digest(),Buffer.from([5,0,0,0,1])]);

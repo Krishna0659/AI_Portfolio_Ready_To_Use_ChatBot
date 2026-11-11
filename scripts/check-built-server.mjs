@@ -6,5 +6,5 @@ try{
  let ready=false;
  for(let attempt=0;attempt<60;attempt++){if(server.exitCode!==null)throw Error('Built server stopped before readiness');try{const response=await fetch('http://localhost:3000/api/v1/workspace',{signal:AbortSignal.timeout(1000)});if(response.status===401){ready=true;break;}}catch{}await delay(500);}
  if(!ready)throw Error('Built server did not become ready');
- await check('scripts/api-check.mjs');await check('scripts/membership-check.mjs');
+ await check('scripts/api-check.mjs');await check('scripts/membership-check.mjs');await check('scripts/worker-check.mjs');
 }finally{server.kill('SIGTERM');}
