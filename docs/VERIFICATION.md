@@ -2,6 +2,8 @@
 
 ## Current foundation evidence — 11 November 2026
 
+- Dashboard-originated PaySure import persisted 24,535 characters after the user approved moving the GitHub App binding to the Krishna Gaur Google workspace. App/worker restarted; the exact queued job was made eligible after its previous public-quota delay and completed with no error. Drafts/versions were not modified. Full desktop/mobile inspection remains pending.
+
 - User confirmed real Google confirmation, passkey enrollment and passkey verification succeeded after 1b856ca.
 - All 33 local tests, TypeScript and production build passed for that change.
 - [Foundation CI](https://github.com/Krishna0659/AI_Portfolio_Ready_To_Use_ChatBot/actions/runs/43052895611) passed for 1b856ca, including dependency/credential checks and the disposable Linux/PostgreSQL build, API, membership and worker suite.

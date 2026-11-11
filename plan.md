@@ -4,6 +4,8 @@ Last updated: 11 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] User approved moving the existing GitHub App connection to the Krishna Gaur Google workspace. Updated ignored local configuration, restarted app/worker, and made the exact queued PaySure job eligible after its earlier public-quota delay. The dashboard-originated job succeeded through the authenticated worker and persisted a snapshot with 24,535 characters; error is null. No draft or version was changed. Full desktop/mobile dashboard inspection remains open.
+
 - [x] Authenticated Chrome check: Settings, Sources and Review opened in the Krishna Gaur Google workspace. Added the authorized PaySure repository through the dashboard; worker attempted ingestion and correctly surfaced shared public GitHub quota exhaustion with automatic retry. No evidence persistence success claimed. The Google workspace is not the configured GitHub App workspace; asked the user whether to transfer the existing binding from the older local-development workspace. Desktop review at the current window size is partial; mobile and full navigation checks remain open.
 
 - [x] Replaced the obsolete local-login-dependent GitHub verifier with explicit repository arguments and live workspace-bound GitHub App authorization/README parsing. Both previously authorized repositories passed: PaySure 24,570 characters; Text-Summazrizer 36 characters. TypeScript passed. No sessions, drafts, jobs or sources were modified. This verifies the provider/parser path; dashboard-triggered persistence remains a separate acceptance check.
@@ -82,7 +84,7 @@ Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [imp
 
 **Authentication UI follow-up:** The user confirmed Google OAuth opens the dashboard on `localhost:3000` after the visual update. Development-login-dependent test scripts must be migrated to explicit test fixtures before their next run; the public local-login endpoint is now disabled by user direction.
 
-**Foundation acceptance next:** Real Google/passkey acceptance and foundation CI pass. The local worker is running, and live GitHub App authorization/README parsing passed for both configured repositories using the updated verifier. Remaining: dashboard-triggered GitHub sync/persistence acceptance and authenticated desktop/mobile dashboard inspection. Google confirmation alone does not permit deletion. Phase 1 remains open.
+**Foundation acceptance next:** Real Google/passkey acceptance, foundation CI and dashboard-originated authenticated GitHub worker persistence now pass. The user-approved GitHub App binding is on the Krishna Gaur Google workspace. Remaining: finish authenticated desktop/mobile dashboard inspection and reconcile the Phase 1 exit evidence. Google confirmation alone does not permit deletion. Phase 1 remains open.
 
 **Current user-directed design work — 9 November:** The refined local landing implementation is available at `/landing`, including original terrain, circular exit, text choreography and mobile dock. It remains a reference-inspired approximation: the reference's detailed materials/lighting, media distortion, asymmetric product showcase and full motion choreography are not reproduced exactly. Keep reference assets separate from shipping assets. Complete fidelity refinement, performance measurement and an unclipped desktop visual review before claiming the requested match. This work does not close any foundation/release checks below or authorize hosting.
 
