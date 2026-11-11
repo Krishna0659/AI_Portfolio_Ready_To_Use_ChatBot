@@ -2,6 +2,7 @@
 
 ## Current foundation evidence — 11 November 2026
 
+- Local Phase 2 Profiles accepted against PRD section 10: 38 automated tests pass (zero failures/skips), including 5 dedicated Phase 2 profile tests covering concurrent approvals, stale edits, database-enforced immutability on versions/approvals/evidence, append-only audit log, and rollback restoration. TypeScript and production build passed.
 - Local Phase 1 accepted against PRD section 10: authentication and two-tenant isolation pass. Scoped desktop dashboard and 400px Sources/Review/Versions/Settings inspection completed, including horizontal navigation to Settings. Desktop restored. No facts or approvals changed. Full accessibility and every device are outside this check.
 - Core CI success is recorded below. Latest documentation/verifier commit CI lookup was rate-limited by GitHub and is not claimed verified.
 

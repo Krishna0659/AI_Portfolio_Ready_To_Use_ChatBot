@@ -1,6 +1,6 @@
 # Phase 1 implementation status
 
-Milestone disposition — 11 November 2026: local Phase 1 Foundation is complete against the PRD authentication/two-tenant isolation gate. Scoped desktop/mobile inspection, real Google/passkey acceptance and authenticated worker persistence are verified. Historical pending Phase 1 notes below are superseded. Phase 2 Profiles is next; hosting and production release remain deferred.
+Milestone disposition — 11 November 2026: local Phase 1 Foundation and Phase 2 Profiles are complete against PRD section 10 exit gates. Database-enforced approval and evidence provenance, immutable triggers, append-only audit log, concurrent approval serialization, stale edit rejection, and rollback restoration are verified across 38 automated tests. Phase 3 Ingestion is next; hosting and production release remain deferred.
 
 Current update (11 November 2026): Google is the only sign-in method; the public local-login endpoint is disabled and theme switching has been removed. Passkey enrollment uses a five-minute, one-use Google account-access confirmation bound to the existing session. Sensitive actions for Google accounts require passkey verification. The user confirmed the real Google/enrollment/verification sequence succeeds. Commit 1b856ca passed foundation CI and 33 local tests; local API/membership checks also passed and the worker was started. Fresh authenticated GitHub import and dashboard browser acceptance remain outstanding, so Phase 1 is not closed. Older implementation details below describe historical behavior where superseded by this update.
 
@@ -8,6 +8,7 @@ This is a functioning local development implementation, not completion of the fu
 
 ## Implemented
 
+- **Phase 2 Profiles**: Database-enforced `version_evidence` table with composite foreign keys to versions, snapshots, and sources with tenant RLS. Complete `approvals` metadata (`draft_revision`, `partial_ack`, `publish_consent`). Immutable triggers preventing modification on `versions`, `approvals`, and `version_evidence`. Append-only protection trigger and runtime role revocation on `audit` table. Draft rejection/reset API and UI discard control. Dedicated test suite in `tests/profiles.test.ts` verifying concurrent approval serialization, stale edit conflict rejection, rollback restoration, and cross-tenant isolation.
 - Next.js App Router, React, TypeScript; locally served IBM Plex Sans and responsive dense dashboard.
 - PostgreSQL persistence, a separate non-owner runtime role, forced tenant RLS on content tables, tenant-bearing foreign keys, transaction-local context.
 - Google OIDC authorization code + PKCE/state/nonce flow; opaque hashed sessions and CSRF-protected mutations. Transient verifier/nonce payloads use AES-256-GCM encryption bound to state. ID-token signatures, issuer, audience, expiry and nonce are checked. Two Google accounts successfully signed in interactively on 1 November 2026; configuration and session creation were verified. An earlier generic failure for the second account did not recur on a fresh attempt; its cause is unconfirmed. Safe stage/error references now support diagnosis.
