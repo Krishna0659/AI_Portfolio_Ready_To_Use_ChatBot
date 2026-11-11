@@ -1,7 +1,10 @@
 'use client';
 import {useEffect,useState} from 'react';
+import type {ComponentProps} from 'react';
+import PasskeyControls from '../utils/auth/PasskeyControls';
 
-export function AccountDeletion({csrf,local,disabled,onDeleted}:{csrf:string;local:boolean;disabled:boolean;onDeleted:(receipt:string)=>void}){
+export function AccountDeletion(props:ComponentProps<typeof AccountDeletionBody>){return <><PasskeyControls csrf={props.csrf} disabled={props.disabled}/><AccountDeletionBody {...props}/></>;}
+function AccountDeletionBody({csrf,local,disabled,onDeleted}:{csrf:string;local:boolean;disabled:boolean;onDeleted:(receipt:string)=>void}){
  const [confirmation,setConfirmation]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  async function erase(){setBusy(true);setError('');try{
  const r=await fetch('/api/v1/account/erase',{method:'POST',headers:{'Content-Type':'application/json','x-csrf-token':csrf},body:JSON.stringify({confirm:confirmation})});const data=await r.json();if(!r.ok)throw Error(data.error);onDeleted(data.receipt);

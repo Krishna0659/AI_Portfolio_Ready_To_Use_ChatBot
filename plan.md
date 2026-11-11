@@ -4,6 +4,8 @@ Last updated: 11 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Connected passkey registration and verification endpoints with CSRF/origin enforcement, bounded responses, mandatory user verification, account-bound credentials and counter updates. Added reusable Settings controls in utils/auth. Successful assertions grant five minutes of recent authentication without creating a login session. All 31 tests pass, including a cryptographically signed assertion, counter update, replay rejection and grant expiry. Enrollment requires Google's verified recent auth_time and fails closed without it. Real device enrollment and the Google freshness prerequisite remain unverified; Phase 1 remains open.
+
 - [x] Added identity-only passkey credential storage and session-bound, five-minute, one-use challenges. Applied the additive local migration. All 30 local automated tests and TypeScript passed, including wrong-account/session/purpose rejection, concurrent replay rejection, expiry, session cascade cleanup and web/worker role denial. This is storage/challenge infrastructure only: no passkey enrollment endpoint, signature verification, UI or recent-authentication grant is enabled yet.
 
 - [x] 11 November fresh Linux/PostgreSQL 17 suite exited successfully: 29 automated tests, 7 parser tests, TypeScript, production build and built-server API/membership checks passed. npm installation audit reported zero vulnerabilities. Regenerated mismatched disposable credentials after the first setup attempt failed; no live credentials or user database were changed. Pinned SimpleWebAuthn dependencies included in the tested dependency batch; enrollment and verification remain unimplemented.
