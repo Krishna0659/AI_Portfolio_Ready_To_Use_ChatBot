@@ -18,6 +18,7 @@ services:
       CHROMA_PORT: "8000"
       KB_API_KEY: ${KB_API_KEY:?set KB_API_KEY in .env}
       KB_DATA_DIR: /data
+      KB_CALLER_GRANTS: ${KB_CALLER_GRANTS:-{}}
     depends_on:
       chroma:
         condition: service_started

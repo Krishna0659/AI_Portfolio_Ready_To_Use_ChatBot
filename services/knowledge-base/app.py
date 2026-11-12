@@ -4,12 +4,14 @@ import hashlib
 import json
 import os
 import threading
+import hmac
 from functools import wraps
 from pathlib import Path
 from typing import Literal
 
 import chromadb
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from sentence_transformers import SentenceTransformer
 
@@ -19,8 +21,37 @@ COLLECTION_NAME = os.getenv("KB_COLLECTION", "portfolioai-approved-v1")
 MODEL_NAME = os.getenv("KB_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 API_KEY = os.getenv("KB_API_KEY", "change-me")
 MAX_FACTS = int(os.getenv("KB_MAX_FACTS", "2000"))
+GRANTS = json.loads(os.getenv("KB_CALLER_GRANTS", "{}"))
+
+
+class BodyLimit:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'http':
+            return await self.app(scope, receive, send)
+        body = bytearray()
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                return
+            body.extend(message.get('body', b''))
+            if len(body) > 1_048_576:
+                return await JSONResponse({'detail': 'request exceeds 1 MiB'}, status_code=413)(scope, receive, send)
+            if not message.get('more_body', False):
+                break
+        delivered = False
+        async def replay():
+            nonlocal delivered
+            if delivered:
+                return await receive()
+            delivered = True
+            return {'type': 'http.request', 'body': bytes(body), 'more_body': False}
+        await self.app(scope, replay, send)
 
 app = FastAPI(title="PortfolioAI Knowledge Base", version="1.0.0")
+app.add_middleware(BodyLimit)
 lock = threading.RLock()
 client: chromadb.HttpClient | None = None
 collection = None
@@ -68,8 +99,23 @@ class QueryRequest(BaseModel):
 
 
 def require_key(x_kb_api_key: str | None = Header(default=None)) -> None:
-    if not x_kb_api_key or x_kb_api_key != API_KEY or API_KEY == "change-me":
+    if not x_kb_api_key or not hmac.compare_digest(x_kb_api_key.encode(), API_KEY.encode()) or API_KEY == "change-me":
         raise HTTPException(status_code=401, detail="invalid knowledge-base credentials")
+
+
+async def require_scope(request: Request, x_kb_api_key: str | None = Header(default=None)):
+    digest = hashlib.sha256((x_kb_api_key or '').encode()).hexdigest()
+    grant = GRANTS.get(digest)
+    if not grant:
+        raise HTTPException(status_code=401, detail="invalid caller credentials")
+    operation = request.url.path.rsplit('/', 1)[-1]
+    data = dict(request.query_params) if request.method == 'GET' else await request.json()
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=422, detail="expected object")
+    allowed_profiles = grant.get('profiles', {})
+    profiles = allowed_profiles.get(data.get('tenant_id'), [])
+    if operation not in grant.get('operations', []) or (data.get('profile_id') not in profiles and '*' not in profiles):
+        raise HTTPException(status_code=403, detail="caller scope denied")
 
 
 def load_state() -> dict[str, dict[str, int]]:
@@ -93,6 +139,31 @@ def serialized(fn):
         with lock:
             return fn(*args, **kwargs)
     return wrapped
+
+
+def cleanup_snapshots(col, tenant_id, profile_id, snapshot):
+    """Caller holds the write lock; only remove records outside the active snapshot."""
+    where = {"$and": [{"tenant_id": tenant_id}, {"profile_id": profile_id}]}
+    offset = 0
+    while True:
+        page = col.get(where=where, limit=200, offset=offset, include=['metadatas'])
+        if not page['ids']:
+            return
+        stale = [record_id for record_id, meta in zip(page['ids'], page['metadatas'])
+                 if meta.get('snapshot') != snapshot]
+        if stale:
+            col.delete(ids=stale)
+        offset += len(page['ids']) - len(stale)
+
+
+def finish_index(col, req, current):
+    try:
+        cleanup_snapshots(col, req.tenant_id, req.profile_id, current['snapshot'])
+        pending = False
+    except Exception:
+        # Activation is already committed. Exact replay retries cleanup.
+        pending = True
+    return {"status": "indexed", **current, "profile_id": req.profile_id, "cleanup_pending": pending}
 
 
 def resources():
@@ -123,8 +194,8 @@ def ready(_: None = Depends(require_key)):
         raise HTTPException(status_code=503, detail="knowledge base is not ready") from exc
 
 
-@app.post("/v1/index")
-def index(req: IndexRequest, _: None = Depends(require_key)):
+@app.post("/v1/index", dependencies=[Depends(require_scope)])
+def index(req: IndexRequest):
     key = f"{req.tenant_id}:{req.profile_id}"
     with lock:
         state = load_state()
@@ -139,7 +210,8 @@ def index(req: IndexRequest, _: None = Depends(require_key)):
                 raise HTTPException(status_code=409, detail="stale profile generation")
             if current.get("snapshot") != digest:
                 raise HTTPException(status_code=409, detail="generation payload conflict; use a new generation")
-            return {"status": "indexed", **current, "profile_id": req.profile_id}
+            col, _ = resources()
+            return finish_index(col, req, current)
         if current and req.profile_version < current["profile_version"]:
             raise HTTPException(status_code=409, detail="stale profile version")
         col, model = resources()
@@ -167,11 +239,11 @@ def index(req: IndexRequest, _: None = Depends(require_key)):
             raise HTTPException(status_code=503, detail="incomplete staged index")
         state[key] = {"profile_version": req.profile_version, "generation": req.generation, "count": len(ids), "snapshot": digest}
         save_state(state)
-        return {"status": "indexed", **state[key], "profile_id": req.profile_id}
+        return finish_index(col, req, state[key])
 
 
-@app.get("/v1/status")
-def status(tenant_id: str, profile_id: str, _: None = Depends(require_key)):
+@app.get("/v1/status", dependencies=[Depends(require_scope)])
+def status(tenant_id: str, profile_id: str):
     key = f"{tenant_id}:{profile_id}"
     with lock:
         state = load_state()
@@ -181,8 +253,8 @@ def status(tenant_id: str, profile_id: str, _: None = Depends(require_key)):
         return {"status": "ok", "tenant_id": tenant_id, "profile_id": profile_id, **current}
 
 
-@app.post("/v1/purge")
-def purge(req: PurgeRequest, _: None = Depends(require_key)):
+@app.post("/v1/purge", dependencies=[Depends(require_scope)])
+def purge(req: PurgeRequest):
     key = f"{req.tenant_id}:{req.profile_id}"
     with lock:
         state = load_state()
@@ -196,9 +268,9 @@ def purge(req: PurgeRequest, _: None = Depends(require_key)):
         return {"status": "purged", "profile_id": req.profile_id}
 
 
-@app.post("/v1/query")
+@app.post("/v1/query", dependencies=[Depends(require_scope)])
 @serialized
-def query(req: QueryRequest, _: None = Depends(require_key)):
+def query(req: QueryRequest):
     current = load_state().get(f"{req.tenant_id}:{req.profile_id}")
     if not current or current.get("purged"):
         return {"results": []}

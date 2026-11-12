@@ -23,7 +23,11 @@ query = {'tenant_id': profile['tenant_id'], 'profile_id': profile['profile_id'],
 results = call('/v1/query', query)['results']
 assert results and 'PaySure' in results[0]['text']
 query['tenant_id'] = 'unrelated-tenant'
-assert call('/v1/query', query)['results'] == []
+try:
+    call('/v1/query', query)
+    raise AssertionError('cross-tenant request accepted')
+except HTTPError as error:
+    assert error.code == 403
 changed = json.loads(json.dumps(profile))
 changed['facts'][0]['text'] = 'Conflicting payload'
 try:

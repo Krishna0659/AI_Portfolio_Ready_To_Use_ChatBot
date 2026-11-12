@@ -14,7 +14,13 @@ The image build downloads the local embedding model into /opt/embedding-model. R
 
 Local validation on 12 November 2026: real HTTP readiness, resume index/replay, PaySure-first retrieval, unrelated-tenant filtering and five unit tests passed. The running local stack uses a generated environment secret. Configure a durable private .env secret before future Compose recreation.
 
-Production limitations: the shared key trusts the backend to authorize tenant IDs; replacement indexing is not atomic; conflicting same-generation payloads are not rejected yet. Restore testing, resource limits and evaluation metrics remain open. Keep this service disconnected from the website until those acceptance gates pass.
+Hardening verification: seven unit tests and real HTTP smoke pass staged activation, replay/conflict handling, purge withdrawal and tenant filtering. New snapshots activate only after count verification; old snapshots remain stored but excluded from queries. Legacy snapshots remain readable; republish with a higher generation to adopt the new format.
+
+Business endpoints now require KB_CALLER_GRANTS, a JSON map keyed by the lowercase SHA-256 of each caller secret. Each entry contains `profiles` (tenant ID mapped to allowed profile IDs, or `['*']` for all profiles in that tenant) and `operations` (index, query, purge, status). Missing grants deny all business access. KB_API_KEY grants readiness access only unless its hash is separately configured. Secrets must be high-entropy random values. Configure grants privately before Compose recreation. The running test stack permits only fixture-tenant. Request bodies are capped at 1 MiB, including streamed bodies.
+
+Nine unit/HTTP tests and the real Docker smoke pass after authorization changes. Test profiles are purged after successful smoke runs.
+
+Production limitations: synchronization supports exactly one process/replica. Credential provisioning/rotation, obsolete snapshot cleanup, full power-loss/restart/restore testing, concurrency and resource limits, timeouts, operation tracking and evaluation metrics remain open. Keep this service disconnected from the website until those acceptance gates pass.
 
 ## Fixture smoke test
 
