@@ -12,7 +12,7 @@ if(!/^[a-f0-9]{48}$/.test(password))throw Error('Invalid runtime password');
 await db.query(`DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='portfolio_runtime') THEN CREATE ROLE portfolio_runtime LOGIN PASSWORD '${password}'; END IF; END $$`);
 await db.query('GRANT USAGE ON SCHEMA public TO portfolio_runtime');
 await db.query('GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO portfolio_runtime');
-await db.query('REVOKE UPDATE ON versions,approvals,version_evidence FROM portfolio_runtime');
+await db.query('REVOKE UPDATE ON versions,approvals,version_evidence,exports FROM portfolio_runtime');
 await db.query('REVOKE UPDATE,DELETE ON audit FROM portfolio_runtime');
 await db.query(await readFile('packages/db/identity.sql','utf8'));
 if(process.env.IDENTITY_DATABASE_URL){

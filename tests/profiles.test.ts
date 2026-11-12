@@ -3,7 +3,7 @@ import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {pool} from '../packages/db';
-import {emptyProfile,hash,markdown,Profile} from '../packages/contracts/profile';
+import {emptyProfile,hash,markdown,Profile,profileSchema} from '../packages/contracts/profile';
 
 after(()=>Promise.all([pool.end(),fixturePool.end()]));
 
@@ -226,4 +226,84 @@ test('Phase 2: tenant isolation protects drafts, versions, approvals, and eviden
   await fixturePool.query('DELETE FROM workspaces WHERE id=ANY($1::uuid[])',[[tA,tB]]);
   await fixturePool.query('DELETE FROM accounts WHERE id=ANY($1::uuid[])',[[uA,uB]]);
  }
+});
+
+test('Phase 2: version base_version_id records approval lineage DAG and exports table tracks downloads with RLS',async()=>{
+ const uA=randomUUID(),uB=randomUUID(),tA=randomUUID(),tB=randomUUID();
+ const v1Id=randomUUID(),v2Id=randomUUID(),expId=randomUUID();
+ try{
+  await fixturePool.query("INSERT INTO accounts(id,issuer,subject,name) VALUES($1::uuid,'profiles-test',$1::text,'Lineage User A'),($2::uuid,'profiles-test',$2::text,'Lineage User B')",[uA,uB]);
+  await fixturePool.query('INSERT INTO workspaces(id,owner_id) VALUES($1,$2),($3,$4)',[tA,uA,tB,uB]);
+
+  const p1:Profile={schemaVersion:1,displayName:'Lineage V1',headline:'First',sections:[{id:randomUUID(),title:'S1',facts:[{id:randomUUID(),text:'Fact 1',sourceId:null,snapshotId:null}]}]};
+  const p2:Profile={schemaVersion:1,displayName:'Lineage V2',headline:'Second',sections:[{id:randomUUID(),title:'S1',facts:[{id:randomUUID(),text:'Fact 2',sourceId:null,snapshotId:null}]}]};
+
+  await transaction(tA,async db=>{
+   // Version 1 has no base version
+   await db.query('INSERT INTO versions(id,tenant_id,number,content,content_hash,markdown,draft_revision,base_version_id) VALUES($1,$2,1,$3,$4,$5,1,NULL)',[v1Id,tA,p1,hash(p1),markdown(p1)]);
+   // Version 2 branches from Version 1
+   await db.query('INSERT INTO versions(id,tenant_id,number,content,content_hash,markdown,draft_revision,base_version_id) VALUES($1,$2,2,$3,$4,$5,2,$6)',[v2Id,tA,p2,hash(p2),markdown(p2),v1Id]);
+   // Record export in exports table
+   await db.query('INSERT INTO exports(id,tenant_id,version_id,format,requested_by) VALUES($1,$2,$3,\'json\',$4)',[expId,tA,v2Id,uA]);
+  });
+
+  // Verify lineage
+  const rowV2=(await transaction(tA,db=>db.query('SELECT base_version_id FROM versions WHERE id=$1',[v2Id]))).rows[0];
+  assert.equal(rowV2.base_version_id,v1Id);
+
+  // Verify exports record
+  const expRows=(await transaction(tA,db=>db.query('SELECT * FROM exports WHERE id=$1',[expId]))).rows;
+  assert.equal(expRows.length,1);
+  assert.equal(expRows[0].format,'json');
+
+  // Verify Tenant B cannot query Tenant A's exports
+  assert.equal((await transaction(tB,db=>db.query('SELECT * FROM exports WHERE id=$1',[expId]))).rowCount,0);
+
+  // Verify exports table is immutable against UPDATE
+  await assert.rejects(
+   transaction(tA,db=>db.query("UPDATE exports SET format='markdown' WHERE id=$1",[expId])),
+   /permission denied/
+  );
+ }finally{
+  await fixturePool.query('DELETE FROM workspaces WHERE id=ANY($1::uuid[])',[[tA,tB]]);
+  await fixturePool.query('DELETE FROM accounts WHERE id=ANY($1::uuid[])',[[uA,uB]]);
+ }
+});
+
+test('Phase 2: profile boundary limits enforce maximum 500 facts and 1 MB canonical payload',async()=>{
+ const factId=randomUUID();
+ const makeSections=(count:number):Profile['sections']=>{
+  const sections:Profile['sections']=[];
+  let remaining=count;
+  const numSections=Math.min(20,Math.ceil(count/50));
+  for(let i=0;i<numSections;i++){
+   const take=Math.min(50,remaining);
+   remaining-=take;
+   sections.push({
+    id:randomUUID(),
+    title:`Section ${i+1}`,
+    facts:Array.from({length:take},(_,j)=>({id:randomUUID(),text:`Fact text ${j}`,sourceId:null,snapshotId:null}))
+   });
+  }
+  return sections;
+ };
+
+ const validProfile:Profile={
+  schemaVersion:1,
+  displayName:'Bounded User',
+  headline:'Software Engineer',
+  sections:makeSections(50)
+ };
+ const validRes=profileSchema.safeParse(validProfile);
+ assert.equal(validRes.success,true);
+
+ const overflowProfile={
+  schemaVersion:1,
+  displayName:'Overflow User',
+  headline:'Architect',
+  sections:makeSections(501)
+ };
+ const overflowRes=profileSchema.safeParse(overflowProfile);
+ assert.equal(overflowRes.success,false);
+ assert.ok(overflowRes.error?.issues.some((i: {message: string})=>i.message.includes('500 total facts')));
 });

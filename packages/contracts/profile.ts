@@ -2,7 +2,14 @@ import { z } from 'zod';
 import canonicalize from 'canonicalize';
 import { createHash } from 'node:crypto';
 export const factSchema = z.object({id:z.uuid(),text:z.string().trim().min(1).max(10000),sourceId:z.uuid().nullable(),snapshotId:z.uuid().nullable()}).strict().refine(f=>Boolean(f.sourceId)===Boolean(f.snapshotId),'Source and snapshot must be paired');
-export const profileSchema=z.object({schemaVersion:z.literal(1),displayName:z.string().trim().max(120),headline:z.string().max(240),sections:z.array(z.object({id:z.uuid(),title:z.string().trim().min(1).max(120),facts:z.array(factSchema).max(100)}).strict()).max(20)}).strict().superRefine((p,c)=>{const ids=p.sections.flatMap(s=>[s.id,...s.facts.map(f=>f.id)]);if(new Set(ids).size!==ids.length)c.addIssue({code:'custom',message:'Duplicate content IDs'});});
+export const profileSchema=z.object({schemaVersion:z.literal(1),displayName:z.string().trim().max(120),headline:z.string().max(240),sections:z.array(z.object({id:z.uuid(),title:z.string().trim().min(1).max(120),facts:z.array(factSchema).max(100)}).strict()).max(20)}).strict().superRefine((p,c)=>{
+ const ids=p.sections.flatMap(s=>[s.id,...s.facts.map(f=>f.id)]);
+ if(new Set(ids).size!==ids.length)c.addIssue({code:'custom',message:'Duplicate content IDs'});
+ const totalFacts=p.sections.reduce((n,s)=>n+s.facts.length,0);
+ if(totalFacts>500)c.addIssue({code:'custom',message:'Maximum 500 total facts allowed per profile'});
+ const canonical=canonicalize(p);
+ if(!canonical||Buffer.byteLength(canonical,'utf8')>1048576)c.addIssue({code:'custom',message:'Profile canonical JSON exceeds 1 MB limit'});
+});
 export type Profile=z.infer<typeof profileSchema>;
 export const emptyProfile:Profile={schemaVersion:1,displayName:'',headline:'',sections:[]};
 export function hash(value:unknown){return createHash('sha256').update(canonicalize(value)!).digest('hex');}
