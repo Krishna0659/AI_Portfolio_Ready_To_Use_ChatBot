@@ -4,6 +4,13 @@ services:
   chroma:
     image: chromadb/chroma:1.4.1
     restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 256
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
     expose:
       - "8000"
     volumes:
@@ -13,6 +20,14 @@ services:
   knowledge-base:
     build: .
     restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
     environment:
       CHROMA_HOST: chroma
       CHROMA_PORT: "8000"

@@ -5,6 +5,8 @@ import json
 import os
 import threading
 import hmac
+import asyncio
+import time
 from functools import wraps
 from pathlib import Path
 from typing import Literal
@@ -28,13 +30,29 @@ GRANTS = json.loads(os.getenv("KB_CALLER_GRANTS", "{}"))
 class BodyLimit:
     def __init__(self, app):
         self.app = app
+        self.active = 0
+        self.max_active = 16
+        self.body_timeout = 10
 
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
             return await self.app(scope, receive, send)
+        if self.active >= self.max_active:
+            return await JSONResponse({'detail': 'service busy'}, status_code=503, headers={'Retry-After': '1'})(scope, receive, send)
+        self.active += 1
+        try:
+            await self.handle(scope, receive, send)
+        finally:
+            self.active -= 1
+
+    async def handle(self, scope, receive, send):
         body = bytearray()
+        deadline = time.monotonic() + self.body_timeout
         while True:
-            message = await receive()
+            try:
+                message = await asyncio.wait_for(receive(), timeout=max(0, deadline - time.monotonic()))
+            except asyncio.TimeoutError:
+                return await JSONResponse({'detail': 'request body timed out'}, status_code=408)(scope, receive, send)
             if message['type'] == 'http.disconnect':
                 return
             body.extend(message.get('body', b''))
