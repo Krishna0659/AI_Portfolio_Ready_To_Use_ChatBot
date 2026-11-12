@@ -5,7 +5,10 @@ CREATE OR REPLACE FUNCTION public.worker_claim(tenant uuid,authenticated_github 
 DECLARE job public.jobs; source public.sources; token uuid;
 BEGIN
  IF NOT EXISTS(SELECT 1 FROM public.worker_tenants() t WHERE t=tenant) THEN RETURN NULL; END IF;
- UPDATE public.jobs SET status=CASE WHEN attempt>=5 THEN 'failed' ELSE 'queued' END,error='Worker interrupted. Retry scheduled or attempt limit reached.',lease=NULL,lease_until=NULL,available_at=now()+least(300,5*power(2,least(attempt,6)))*interval '1 second' WHERE tenant_id=tenant AND status='running' AND lease_until<now();
+ -- Reset expired leases: exceeded attempt cap → failed, otherwise → retry_wait with backoff
+ UPDATE public.jobs SET status=CASE WHEN attempt>=5 THEN 'failed' ELSE 'retry_wait' END,error='Worker interrupted. Retry scheduled or attempt limit reached.',lease=NULL,lease_until=NULL,available_at=now()+least(300,5*power(2,least(attempt,6)))*interval '1 second' WHERE tenant_id=tenant AND status='running' AND lease_until<now();
+ -- Promote retry_wait jobs that have passed their available_at back to queued so they can be claimed
+ UPDATE public.jobs SET status='queued' WHERE tenant_id=tenant AND status='retry_wait' AND available_at<=now();
  SELECT j.* INTO job FROM public.jobs j JOIN public.sources s ON s.id=j.source_id AND s.tenant_id=j.tenant_id WHERE j.tenant_id=tenant AND j.status='queued' AND j.attempt<5 AND j.available_at<=now() AND s.status='active' AND (s.kind<>'github' OR authenticated_github OR NOT EXISTS(SELECT 1 FROM public.fetch_cooldowns WHERE host='api.github.com' AND retry_at>now())) ORDER BY j.available_at,j.created_at FOR UPDATE OF j SKIP LOCKED LIMIT 1;
  IF NOT FOUND THEN RETURN NULL; END IF;
  token=gen_random_uuid();
@@ -36,12 +39,25 @@ BEGIN
  SELECT attempt INTO tries FROM public.jobs WHERE tenant_id=tenant AND id=job_id AND lease=token AND status='running' AND lease_until>now() FOR UPDATE;
  IF NOT FOUND THEN RETURN false; END IF;
  IF tries>=5 THEN retry_time=NULL; END IF;
- UPDATE public.jobs SET status=CASE WHEN retry_time IS NULL THEN 'failed' ELSE 'queued' END,error=left(message,250),lease=NULL,lease_until=NULL,available_at=coalesce(retry_time,available_at) WHERE tenant_id=tenant AND id=job_id;
+ -- Use retry_wait (not queued) so the job is visibly waiting for its backoff before the next claim
+ UPDATE public.jobs SET status=CASE WHEN retry_time IS NULL THEN 'failed' ELSE 'retry_wait' END,error=left(message,250),lease=NULL,lease_until=NULL,available_at=coalesce(retry_time,available_at) WHERE tenant_id=tenant AND id=job_id;
  IF cooldown_time IS NOT NULL THEN INSERT INTO public.fetch_cooldowns(host,retry_at) VALUES('api.github.com',cooldown_time) ON CONFLICT(host) DO UPDATE SET retry_at=greatest(public.fetch_cooldowns.retry_at,excluded.retry_at); END IF;
+ RETURN true;
+END $$;
+CREATE OR REPLACE FUNCTION public.worker_partial(tenant uuid,job_id uuid,token uuid,evidence text,evidence_hash text,pages_fetched integer) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+DECLARE source_id_value uuid;
+BEGIN
+ IF length(evidence)>200000 OR evidence_hash !~ '^[a-f0-9]{64}$' THEN RAISE EXCEPTION 'Invalid evidence'; END IF;
+ SELECT s.id INTO source_id_value FROM public.sources s JOIN public.jobs j ON j.source_id=s.id AND j.tenant_id=s.tenant_id WHERE j.id=job_id AND j.tenant_id=tenant AND s.status='active' FOR KEY SHARE OF s;
+ IF NOT FOUND THEN RETURN false; END IF;
+ PERFORM 1 FROM public.jobs WHERE tenant_id=tenant AND id=job_id AND lease=token AND status='running' AND lease_until>now() FOR UPDATE;
+ IF NOT FOUND THEN RETURN false; END IF;
+ INSERT INTO public.snapshots(id,tenant_id,source_id,job_id,text,content_hash) VALUES(gen_random_uuid(),tenant,source_id_value,job_id,evidence,evidence_hash);
+ UPDATE public.jobs SET status='partial',partial_pages=pages_fetched,lease=NULL,lease_until=NULL,error='Crawl partial: '||pages_fetched||' page(s) fetched before limit reached.' WHERE tenant_id=tenant AND id=job_id;
  RETURN true;
 END $$;
 CREATE OR REPLACE FUNCTION public.worker_ack_mock(tenant uuid) RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
  UPDATE public.events SET status='mock_succeeded' WHERE tenant_id=tenant AND status='pending' AND mode='mock';
 $$;
-REVOKE ALL ON FUNCTION public.worker_tenants(),public.worker_claim(uuid,boolean),public.worker_heartbeat(uuid,uuid,uuid),public.worker_complete(uuid,uuid,uuid,text,text),public.worker_fail(uuid,uuid,uuid,text,timestamptz,timestamptz),public.worker_ack_mock(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.worker_tenants(),public.worker_claim(uuid,boolean),public.worker_heartbeat(uuid,uuid,uuid),public.worker_complete(uuid,uuid,uuid,text,text),public.worker_fail(uuid,uuid,uuid,text,timestamptz,timestamptz),public.worker_ack_mock(uuid) TO portfolio_worker;
+REVOKE ALL ON FUNCTION public.worker_tenants(),public.worker_claim(uuid,boolean),public.worker_heartbeat(uuid,uuid,uuid),public.worker_complete(uuid,uuid,uuid,text,text),public.worker_fail(uuid,uuid,uuid,text,timestamptz,timestamptz),public.worker_ack_mock(uuid),public.worker_partial(uuid,uuid,uuid,text,text,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.worker_tenants(),public.worker_claim(uuid,boolean),public.worker_heartbeat(uuid,uuid,uuid),public.worker_complete(uuid,uuid,uuid,text,text),public.worker_fail(uuid,uuid,uuid,text,timestamptz,timestamptz),public.worker_ack_mock(uuid),public.worker_partial(uuid,uuid,uuid,text,text,integer) TO portfolio_worker;

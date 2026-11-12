@@ -13,9 +13,13 @@ export function appJwt(config:AppConfig,now=Date.now()){
  return body+'.'+createSign('RSA-SHA256').update(body).sign(key).toString('base64url');
 }
 type Transport=(path:string,credential:string,body?:unknown)=>Promise<unknown>;
+
+/** All fixed GitHub API paths accepted by the app transport. */
+const ALLOWED_PATH=/^\/(repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(installation|readme|contents\/[A-Za-z0-9_./-]*|git\/trees\/[a-f0-9]+(\?recursive=1)?)|app\/installations\/[0-9]+\/access_tokens)$/;
+
 // Only fixed GitHub API paths are accepted; credentials never follow redirects.
 export async function githubRequest(path:string,credential:string,body?:unknown){
- if(!/^\/(repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(installation|readme)|app\/installations\/[0-9]+\/access_tokens)$/.test(path))throw Error('Unsupported GitHub API operation');
+ if(!ALLOWED_PATH.test(path))throw Error('Unsupported GitHub API operation');
  const response=await fetch('https://api.github.com'+path,{method:body?'POST':'GET',redirect:'error',signal:AbortSignal.timeout(15000),headers:{Authorization:`Bearer ${credential}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2026-03-10','User-Agent':'PortfolioAI/1.0','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
  if(!response.ok)throw httpFailure(response.status,'api.github.com',Object.fromEntries(response.headers));
  const reader=response.body!.getReader();const chunks:Uint8Array[]=[];let bytes=0;while(true){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>2*1024*1024){await reader.cancel();throw Error('GitHub response exceeds 2 MB');}chunks.push(value);}return JSON.parse(Buffer.concat(chunks).toString());
@@ -34,4 +38,83 @@ export async function ownerReadme(url:string,tenant:string){
  const appId=z.string().regex(/^\d+$/).parse(process.env.GITHUB_APP_ID);const installationId=z.string().regex(/^\d+$/).parse(process.env.GITHUB_INSTALLATION_ID);
  let privateKey:string;try{privateKey=await readFile(process.env.GITHUB_PRIVATE_KEY_PATH!,'utf8');}catch{throw Error('GitHub private key file could not be read. Check the local configuration.');}
  return appReadme(url,{appId,installationId,privateKey});
+}
+
+/** A single document fetched from the repository. */
+export type RepoDoc={path:string;text:string;commitSha:string};
+
+const treeEntrySchema=z.object({path:z.string(),type:z.string(),sha:z.string(),size:z.number().optional()});
+const treeSchema=z.object({sha:z.string().optional(),tree:z.array(treeEntrySchema),truncated:z.boolean()});
+const fileSchema=z.object({encoding:z.literal('base64'),content:z.string().max(2000000),size:z.number().max(10*1024*1024)});
+
+/**
+ * TR12 GitHub multi-doc import.
+ * Fetches .md/.txt files from root and docs/ directories of a repository.
+ * Records commit SHA and file path per document.
+ * Enforces maxFiles (default 50) and maxRepoBytes (default 10 MiB) limits.
+ * Rejects non-.md/.txt file types (only text content types supported).
+ */
+export async function appDocs(
+ url:string,
+ config:AppConfig,
+ opts:{maxFiles?:number;maxRepoBytes?:number}={},
+ request:Transport=githubRequest
+):Promise<{docs:RepoDoc[];commitSha:string;truncated:boolean}>{
+ const maxFiles=opts.maxFiles??50;
+ const maxRepoBytes=opts.maxRepoBytes??(10*1024*1024);
+ const endpoint=new URL(githubReadme(url)).pathname;
+ const [,,owner,repo]=endpoint.split('/');
+
+ const jwt=appJwt(config);
+ // Verify installation
+ const installation=z.object({id:z.number().int().positive(),suspended_at:z.string().nullable().optional()}).parse(
+  await request(`/repos/${owner}/${repo}/installation`,jwt)
+ );
+ if(String(installation.id)!==config.installationId||installation.suspended_at)
+  throw Error('Repository is not available through the configured GitHub App installation');
+
+ // Get installation token scoped to this repo with contents:read
+ const token=z.object({token:z.string().min(1),expires_at:z.string().datetime()}).parse(
+  await request(`/app/installations/${config.installationId}/access_tokens`,jwt,{repositories:[repo],permissions:{contents:'read'}})
+ );
+ if(Date.parse(token.expires_at)<=Date.now())throw Error('GitHub returned an expired installation token');
+
+ // Get recursive tree at HEAD
+ const treeRaw=await request(`/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`,token.token);
+ const tree=treeSchema.parse(treeRaw);
+ // Extract commit SHA from tree sha (the tree sha is the tree object; we use it as a stable ref)
+ const commitSha=tree.sha??'HEAD';
+
+ // Filter: .md/.txt blobs in root or docs/ directory only
+ const allowed=tree.tree.filter(e=>
+  e.type==='blob'&&
+  /\.(md|txt)$/i.test(e.path)&&
+  (!e.path.includes('/')||/^docs\//i.test(e.path))
+ );
+
+ const docs:RepoDoc[]=[];
+ let totalBytes=0;
+ let truncated=tree.truncated;
+
+ for(const entry of allowed){
+  if(docs.length>=maxFiles){truncated=true;break;}
+  if(totalBytes>=maxRepoBytes){truncated=true;break;}
+  let file:z.infer<typeof fileSchema>;
+  try{
+   file=fileSchema.parse(await request(`/repos/${owner}/${repo}/contents/${entry.path}`,token.token));
+  }catch{continue;}
+  if(totalBytes+file.size>maxRepoBytes){truncated=true;break;}
+  totalBytes+=file.size;
+  const text=Buffer.from(file.content.replace(/\n/g,''),'base64').toString('utf8');
+  docs.push({path:entry.path,text,commitSha});
+ }
+ return{docs,commitSha,truncated};
+}
+
+export async function ownerDocs(url:string,tenant:string,opts:{maxFiles?:number;maxRepoBytes?:number}={}){
+ if(!ownerAppEnabled(tenant))throw Error('GitHub App is not configured for this workspace');
+ const appId=z.string().regex(/^\d+$/).parse(process.env.GITHUB_APP_ID);
+ const installationId=z.string().regex(/^\d+$/).parse(process.env.GITHUB_INSTALLATION_ID);
+ let privateKey:string;try{privateKey=await readFile(process.env.GITHUB_PRIVATE_KEY_PATH!,'utf8');}catch{throw Error('GitHub private key file could not be read.');}
+ return appDocs(url,{appId,installationId,privateKey},opts);
 }

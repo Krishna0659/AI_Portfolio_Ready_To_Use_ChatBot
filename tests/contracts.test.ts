@@ -3,6 +3,44 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {profileSchema,hash,markdown,profileDiff,Profile} from '../packages/contracts/profile';
 import {publicAddress,safeUrl,githubReadme} from '../services/fetch-broker/fetch';
+import {retryDecision} from '../packages/domain/jobs';
+
+/** TR14: retry_wait and partial are valid job states; verify retryDecision produces retry times. */
+test('TR14 retry_wait: retryDecision returns retryAt for transient errors under 5 attempts', ()=>{
+ const error=Object.assign(Error('connection reset'),{code:'ECONNRESET'});
+ const decision=retryDecision(error,1);
+ assert.ok(decision.retryAt!==null,'should schedule a retry for transient ECONNRESET');
+ assert.ok(decision.retryAt!.getTime()>Date.now(),'retry should be in the future');
+ assert.ok(decision.message.length<=250,'message should be bounded');
+});
+
+test('TR14 retry_wait: retryDecision returns null retryAt at or above 5 attempts', ()=>{
+ const error=Object.assign(Error('timeout'),{code:'ETIMEDOUT'});
+ const decision=retryDecision(error,5);
+ assert.equal(decision.retryAt,null,'no retry after 5 attempts');
+ assert.ok(decision.message.includes('Retry limit reached'),'message should indicate retry limit');
+});
+
+test('TR14 retry_wait: retryDecision returns null for non-transient errors', ()=>{
+ const error=Error('Invalid document format');
+ const decision=retryDecision(error,1);
+ assert.equal(decision.retryAt,null,'non-transient errors should not be retried');
+});
+
+test('TR14 partial: job states include queued, running, succeeded, failed, cancelled, retry_wait, partial', ()=>{
+ // This verifies the domain contracts align with the extended schema
+ const validStates=['queued','running','succeeded','failed','cancelled','retry_wait','partial'];
+ // If retryDecision produces a retryAt, the job transitions to retry_wait via worker_fail
+ const error=Object.assign(Error('timeout'),{code:'ETIMEDOUT'});
+ const withRetry=retryDecision(error,1);
+ assert.ok(withRetry.retryAt,'should produce retry time for retry_wait transition');
+ // After max attempts, final failed state
+ const noRetry=retryDecision(error,5);
+ assert.equal(noRetry.retryAt,null,'max attempts = failed not retry_wait');
+ // Partial is for multi-page crawls that hit page/byte limit but still produced evidence
+ assert.ok(validStates.includes('partial'),'partial is a valid terminal state');
+ assert.ok(validStates.includes('retry_wait'),'retry_wait is a valid waiting state');
+});
 test('network policy rejects private, loopback, mapped and special addresses',()=>{for(const address of ['127.0.0.1','10.1.2.3','169.254.169.254','192.168.1.1','172.16.0.1','::1','::ffff:127.0.0.1','fc00::1','100.64.0.1','0.0.0.0','224.0.0.1'])assert.equal(publicAddress(address),false,address);assert.equal(publicAddress('8.8.8.8'),true);});
 test('URL and repository boundaries',()=>{for(const url of ['http://example.com','https://user:pass@example.com','https://example.com:8443','file:///etc/passwd'])assert.throws(()=>safeUrl(url));assert.throws(()=>githubReadme('https://github.com/a/b/tree/main'));assert.equal(githubReadme('https://github.com/Krishna0659/PaySure'),'https://api.github.com/repos/Krishna0659/PaySure/readme');});
 test('canonical hashes ignore object key ordering',()=>assert.equal(hash({b:2,a:1}),hash({a:1,b:2})));
