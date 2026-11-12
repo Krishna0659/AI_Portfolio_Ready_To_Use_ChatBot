@@ -120,3 +120,4 @@ test('TR13 Suggestions: applySuggestionsToProfile merges into sections safely', 
   assert.equal(projSection.facts.length, 2);
   assert.equal(projSection.facts[0].text, 'Project PaySure');
 });
+
