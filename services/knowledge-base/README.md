@@ -1,5 +1,9 @@
 # PortfolioAI Knowledge Base
 
+Optional hybrid query: set `mode` to `hybrid` on /v1/query. Default remains `dense`. Hybrid combines dense and BM25 ranks using RRF k=60, up to 20 candidates from each ranking. Both read only the active snapshot and authorized tenant/profile. Lexical scoring scans at most MAX_FACTS records; large-profile latency still requires benchmarking. Distances remain dense distances, not fused scores, and may be null for lexical-only results.
+
+Hybrid evaluation on the unchanged eight-question development set: Recall@3=0.6667, MRR@3=0.6875, mean/max 22.53/48.04 ms. Thirteen tests pass. Because recall stayed unchanged and some ranks regressed, hybrid is optional. No model API or paid dependency was added.
+
 Latest retrieval update: optional approved `subject` and section labels now contextualize each fact's embedding; returned documents stay unchanged. Republish existing profiles with a higher generation to re-embed; old active snapshots are not automatically rewritten. A formal preprocessing-version migration remains pending.
 
 The unchanged eight-question development set now measures Recall@3=0.6667 and MRR@3=0.6667 (previously 0.50), mean/max latency 15.11/28.12 ms. Ten regressions pass. Research-result and computer-vision misses remain. These are tuning-set results, not independent quality acceptance.

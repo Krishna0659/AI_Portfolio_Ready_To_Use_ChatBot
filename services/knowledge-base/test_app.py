@@ -22,6 +22,19 @@ import app
 
 
 class KnowledgeBaseTests(unittest.TestCase):
+    def test_hybrid_uses_same_active_scope_for_both_searches(self):
+        app.save_state({'t:p': {'generation': 2, 'snapshot': 'active'}})
+        col, model = MagicMock(), MagicMock()
+        model.encode.return_value.tolist.return_value = [[1.0]]
+        meta = {'section': 'skills', 'fact_id': 'f'}
+        col.query.return_value = {'ids': [['f']], 'documents': [['Python']], 'metadatas': [[meta]], 'distances': [[0.1]]}
+        col.get.return_value = {'ids': ['f'], 'documents': ['Python'], 'metadatas': [meta]}
+        with patch.object(app, 'resources', return_value=(col, model)):
+            result = app.query(app.QueryRequest(tenant_id='t', profile_id='p', query='Python', mode='hybrid'))
+        self.assertEqual(result['results'][0]['text'], 'Python')
+        self.assertEqual(col.query.call_args.kwargs['where'], col.get.call_args.kwargs['where'])
+        self.assertEqual(col.get.call_args.kwargs['where'], {'$and': [{'tenant_id': 't'}, {'profile_id': 'p'}, {'snapshot': 'active'}]})
+
     def test_cleanup_keeps_active_and_scopes_every_page(self):
         col = MagicMock()
         col.get.side_effect = [
