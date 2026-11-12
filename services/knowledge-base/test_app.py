@@ -22,6 +22,15 @@ import app
 
 
 class KnowledgeBaseTests(unittest.TestCase):
+    def test_failed_collection_initialization_can_retry(self):
+        sdk = MagicMock()
+        sdk.get_or_create_collection.side_effect = [app.httpx.ReadTimeout('stall'), 'collection']
+        with patch.object(app, 'client', None), patch.object(app, 'collection', None), patch.object(app, 'embedder', 'model'), patch.object(app, 'configure_transport'), patch.object(app.chromadb, 'HttpClient', return_value=sdk) as create:
+            with self.assertRaises(app.httpx.ReadTimeout):
+                app.resources()
+            self.assertEqual(app.resources(), ('collection', 'model'))
+            create.assert_called_once()
+
     def test_hybrid_uses_same_active_scope_for_both_searches(self):
         app.save_state({'t:p': {'generation': 2, 'snapshot': 'active'}})
         col, model = MagicMock(), MagicMock()

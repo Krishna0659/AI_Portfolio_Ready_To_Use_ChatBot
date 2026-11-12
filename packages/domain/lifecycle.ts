@@ -42,6 +42,24 @@ export async function deletionStatus(receipt:string){
  if(!/^[A-Za-z0-9_-]{43}$/.test(receipt))return null;
  const result=await pool.query('SELECT status,created_at,completed_at FROM deletion_requests WHERE receipt_hash=$1',[digest(receipt)]);return result.rows[0]??null;
 }
+
+/**
+ * Phase 5 Retention/Reconciliation: list uploaded object files that have no
+ * matching source record (orphaned by interrupted uploads or stale references).
+ * Returns array of orphan filenames relative to .local/objects.
+ * Does not delete — caller decides what to do (log, queue for removal, etc.).
+ */
+export async function reconcileOrphanFiles(list:(dir:string)=>Promise<string[]>=async(dir)=>{
+ const {readdir}=await import('node:fs/promises');
+ return readdir(dir).catch(()=>[]);
+}):Promise<string[]>{
+ const objectDir=path.resolve('.local/objects');
+ const files=await list(objectDir);
+ const validFiles=files.filter(f=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(docx|pdf|txt|md)$/.test(f));
+ if(!validFiles.length)return[];
+ const dbFiles=new Set((await pool.query("SELECT locator FROM sources WHERE kind='upload'")).rows.map((r:Record<string,string>)=>r.locator));
+ return validFiles.filter(f=>!dbFiles.has(f));
+}
 export async function cleanupOne(remove:(file:string)=>Promise<void>=unlink,requestId:string|null=null){
  const pool=workerPool;const db=await pool.connect();let job;
  try{await db.query('BEGIN');const r=await db.query("SELECT * FROM object_deletions WHERE available_at<=now() AND (lease_until IS NULL OR lease_until<now()) AND ($1::uuid IS NULL OR request_id=$1) ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1",[requestId]);job=r.rows[0];if(job){job.lease=randomUUID();await db.query("UPDATE object_deletions SET lease=$2,lease_until=now()+interval '30 seconds',attempt=attempt+1 WHERE id=$1",[job.id,job.lease]);}await db.query('COMMIT');}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}

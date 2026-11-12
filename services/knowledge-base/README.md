@@ -46,6 +46,48 @@ Eight-question baseline: Recall@3=0.50, MRR@3=0.50, warm mean/max 14.34/26.64 ms
 
 ## Fixture smoke test
 
+Tenant admission limits (12 November 2026): each tenant may retain 1,000 profile
+IDs (including purge tombstones) and 10,000 active facts. Index admission runs
+under the state lock before embedding or writing; replacement snapshots replace
+their previous active count. Rejected writes return 409. Existing profiles can
+still be purged at capacity; creating a new tombstone consumes a profile slot.
+Exact replay can still finish cleanup at capacity. These logical quotas do not
+cap Chroma WAL, orphan staging records, physical bytes, or backup disk usage.
+Tombstones are not automatically removed because that could permit stale replay.
+
+Authenticated requests share tenant token buckets across API credentials:
+
+| Request class | Refill per minute | Burst |
+| --- | ---: | ---: |
+| Query | 120 | 20 |
+| Index | 10 | 10 |
+| Purge and status combined | 60 | 10 |
+
+Exhaustion returns 429 with `Retry-After`. Unauthorized requests do not allocate
+buckets. Buckets reset on process restart and assume the enforced single-worker
+deployment; distributed rate limits are not implemented. Malformed JSON and
+non-string scope IDs return 422 before bucket allocation. Limits live in
+`quotas.py`; workload tuning has not been benchmarked.
+
+Verification: 21 app/unit tests and 2 real-SDK transport tests passed. The live
+lifecycle smoke passed, and `smoke_quotas.py` verified 429, retry guidance,
+independent status capacity and refill without creating stored data.
+
+Transport verification (12 November 2026): `chroma_transport.py` applies HTTPX
+connect/pool limits of 3 seconds and read/write inactivity limits of 10 seconds
+before the first Chroma request. The compatibility adapter touches the pinned
+Chroma 1.4.1 request method and refuses other versions; revalidate it on upgrades.
+It does not retry writes automatically. A 503 can leave a write outcome uncertain:
+retry the identical payload/generation, never invent a new generation just because
+the response was lost. Collection initialization can recover after a failed attempt.
+
+Verification: 17 app tests plus 2 real-SDK transport tests passed (run
+`python -m unittest test_transport` separately because app tests mock the SDK).
+With the local Chroma container paused, `check_stalled_chroma.py` observed readiness
+503 after 10.03 seconds. Chroma was unpaused and the full smoke test passed.
+These are inactivity limits per network operation, not a total request deadline;
+lock queues, multi-call operations and embedding execution still need bounds.
+
 The Compose file deliberately publishes no host port. Run the smoke test from a trusted backend container or a one-off diagnostic container attached to the `private` network. Do not add a public port mapping to ChromaDB or the KB service.
 
 The request sequence is:

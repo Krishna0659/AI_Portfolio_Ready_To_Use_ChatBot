@@ -155,3 +155,4 @@ test('Phase 4 Sync: KnowledgeBaseClient setAdapter overrides the adapter', async
  const r2=await client.submit('t1','p1',publishEvent(2));
  assert.equal(r2.status,'mock_succeeded');
 });
+

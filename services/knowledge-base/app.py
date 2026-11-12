@@ -7,16 +7,20 @@ import threading
 import hmac
 import asyncio
 import time
+import shutil
 from functools import wraps
 from pathlib import Path
 from typing import Literal
 
 import chromadb
+import httpx
+from chroma_transport import configure_transport
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from sentence_transformers import SentenceTransformer
 from ranking import lexical, fuse
+from quotas import check_storage, TenantRateLimit
 
 DATA_DIR = Path(os.getenv("KB_DATA_DIR", "/data"))
 STATE_PATH = DATA_DIR / "index-state.json"
@@ -25,6 +29,7 @@ MODEL_NAME = os.getenv("KB_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L
 API_KEY = os.getenv("KB_API_KEY", "change-me")
 MAX_FACTS = int(os.getenv("KB_MAX_FACTS", "2000"))
 GRANTS = json.loads(os.getenv("KB_CALLER_GRANTS", "{}"))
+tenant_rate_limit = TenantRateLimit()
 
 
 class BodyLimit:
@@ -71,6 +76,14 @@ class BodyLimit:
 
 app = FastAPI(title="PortfolioAI Knowledge Base", version="1.0.0")
 app.add_middleware(BodyLimit)
+
+
+@app.exception_handler(httpx.TransportError)
+async def transport_unavailable(request, exc):
+    return JSONResponse({'detail': 'knowledge base temporarily unavailable; retry the same operation payload'},
+                        status_code=503, headers={'Retry-After': '1'})
+
+
 lock = threading.RLock()
 client: chromadb.HttpClient | None = None
 collection = None
@@ -111,6 +124,11 @@ class PurgeRequest(BaseModel):
     generation: int = Field(ge=1)
 
 
+class ReconcileRequest(BaseModel):
+    tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
+    profile_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
+
+
 class QueryRequest(BaseModel):
     mode: Literal['dense', 'hybrid'] = 'dense'
     tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
@@ -130,13 +148,19 @@ async def require_scope(request: Request, x_kb_api_key: str | None = Header(defa
     if not grant:
         raise HTTPException(status_code=401, detail="invalid caller credentials")
     operation = request.url.path.rsplit('/', 1)[-1]
-    data = dict(request.query_params) if request.method == 'GET' else await request.json()
+    try:
+        data = dict(request.query_params) if request.method == 'GET' else await request.json()
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(status_code=422, detail="invalid JSON body")
     if not isinstance(data, dict):
         raise HTTPException(status_code=422, detail="expected object")
+    if not isinstance(data.get('tenant_id'), str) or not isinstance(data.get('profile_id'), str):
+        raise HTTPException(status_code=422, detail="tenant_id and profile_id must be strings")
     allowed_profiles = grant.get('profiles', {})
     profiles = allowed_profiles.get(data.get('tenant_id'), [])
     if operation not in grant.get('operations', []) or (data.get('profile_id') not in profiles and '*' not in profiles):
         raise HTTPException(status_code=403, detail="caller scope denied")
+    tenant_rate_limit.check(data['tenant_id'], operation)
 
 
 def load_state() -> dict[str, dict[str, int]]:
@@ -162,35 +186,42 @@ def serialized(fn):
     return wrapped
 
 
-def cleanup_snapshots(col, tenant_id, profile_id, snapshot):
+def cleanup_snapshots(col, tenant_id, profile_id, snapshot, generation=None):
     """Caller holds the write lock; only remove records outside the active snapshot."""
     where = {"$and": [{"tenant_id": tenant_id}, {"profile_id": profile_id}]}
     offset = 0
-    while True:
+    for _ in range(50):
         page = col.get(where=where, limit=200, offset=offset, include=['metadatas'])
         if not page['ids']:
-            return
+            return False
         stale = [record_id for record_id, meta in zip(page['ids'], page['metadatas'])
-                 if meta.get('snapshot') != snapshot]
+                 if (meta.get('snapshot') != snapshot if snapshot is not None
+                     else meta.get('generation') != generation)]
         if stale:
             col.delete(ids=stale)
         offset += len(page['ids']) - len(stale)
+    return True
 
 
 def finish_index(col, req, current):
     try:
-        cleanup_snapshots(col, req.tenant_id, req.profile_id, current['snapshot'])
-        pending = False
+        pending = cleanup_snapshots(col, req.tenant_id, req.profile_id, current['snapshot'])
     except Exception:
         # Activation is already committed. Exact replay retries cleanup.
         pending = True
     return {"status": "indexed", **current, "profile_id": req.profile_id, "cleanup_pending": pending}
 
 
+@serialized
 def resources():
     global client, collection, embedder
     if client is None:
-        client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST", "chroma"), port=int(os.getenv("CHROMA_PORT", "8000")))
+        configure_transport()
+        try:
+            client = chromadb.HttpClient(host=os.getenv("CHROMA_HOST", "chroma"), port=int(os.getenv("CHROMA_PORT", "8000")))
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="knowledge base connection unavailable", headers={'Retry-After': '1'}) from exc
+    if collection is None:
         collection = client.get_or_create_collection(
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine", "contract_version": "approved-profile-v1", "embedding_model": MODEL_NAME},
@@ -235,6 +266,8 @@ def index(req: IndexRequest):
             return finish_index(col, req, current)
         if current and req.profile_version < current["profile_version"]:
             raise HTTPException(status_code=409, detail="stale profile version")
+        check_storage(state, req.tenant_id, req.profile_id, len(req.facts))
+        check_disk_space()
         col, model = resources()
         ids = [f"{req.tenant_id}:{req.profile_id}:{digest}:{fact.fact_id}" for fact in req.facts]
         documents = [fact.text for fact in req.facts]
@@ -264,6 +297,38 @@ def index(req: IndexRequest):
         return finish_index(col, req, state[key])
 
 
+def check_disk_space():
+    # Reserve headroom for state/tombstone writes. This is admission control,
+    # not a filesystem quota or a guarantee against other disk writers.
+    paths = [DATA_DIR]
+    if os.getenv('KB_CHROMA_DATA_DIR'):
+        paths.append(Path(os.environ['KB_CHROMA_DATA_DIR']))
+    try:
+        if any(shutil.disk_usage(path).free < 512 * 1024 * 1024 for path in paths):
+            raise HTTPException(507, 'insufficient storage headroom')
+    except OSError as exc:
+        raise HTTPException(503, 'storage capacity unavailable') from exc
+
+
+@app.post('/v1/reconcile', dependencies=[Depends(require_scope)])
+@serialized
+def reconcile(req: ReconcileRequest):
+    current = load_state().get(f'{req.tenant_id}:{req.profile_id}')
+    if not current:
+        # Missing state could mean a lost state file; never guess which data to delete.
+        raise HTTPException(404, 'profile index state not found')
+    if not current.get('purged') and not current.get('snapshot') and 'generation' not in current:
+        raise HTTPException(503, 'profile index state incomplete')
+    col, _ = resources()
+    if current.get('purged'):
+        col.delete(where={'$and': [{'tenant_id': req.tenant_id}, {'profile_id': req.profile_id}]})
+        pending = False
+    else:
+        pending = cleanup_snapshots(col, req.tenant_id, req.profile_id,
+                                    current.get('snapshot'), current.get('generation'))
+    return {'status': 'reconciled', 'cleanup_pending': pending}
+
+
 @app.get("/v1/status", dependencies=[Depends(require_scope)])
 def status(tenant_id: str, profile_id: str):
     key = f"{tenant_id}:{profile_id}"
@@ -283,6 +348,9 @@ def purge(req: PurgeRequest):
         current = state.get(key)
         if current and req.generation < current["generation"]:
             raise HTTPException(status_code=409, detail="stale purge generation")
+        # Existing profiles can always be withdrawn, even if limits were lowered.
+        if current is None:
+            check_storage(state, req.tenant_id, req.profile_id, None)
         state[key] = {"generation": req.generation, "profile_version": current.get("profile_version", 0) if current else 0, "purged": True, "count": 0}
         save_state(state)
         col, _ = resources()
