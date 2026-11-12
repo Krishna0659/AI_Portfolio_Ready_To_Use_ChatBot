@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import secrets
+import re
 from pathlib import Path
 
 
@@ -19,6 +20,8 @@ def read_grants():
             raise ValueError('invalid grant')
         if not all(isinstance(t, str) and isinstance(p, list) and all(isinstance(i, str) for i in p) for t, p in grant['profiles'].items()):
             raise ValueError('invalid scopes')
+        if not all(operation in ('index', 'query', 'status', 'purge', 'reconcile') for operation in grant['operations']):
+            raise ValueError('invalid operations')
     return grants
 
 
@@ -30,6 +33,12 @@ def write_grants(grants):
         stream.flush()
         os.fsync(stream.fileno())
     tmp.replace(path)
+    if os.name != 'nt':
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
 
 
 def main():
@@ -48,6 +57,8 @@ def main():
         return
     if not all((args.tenant, args.profile, args.operation, args.key_file)):
         parser.error('provisioning requires tenant, profile, operation and key-file')
+    if not re.fullmatch(r'[a-zA-Z0-9_-]{1,100}', args.tenant) or not all(p == '*' or re.fullmatch(r'[a-zA-Z0-9_-]{1,100}', p) for p in args.profile):
+        parser.error('invalid tenant/profile scope')
     key = secrets.token_urlsafe(32)
     descriptor = os.open(args.key_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, 'w') as stream:

@@ -29,7 +29,8 @@ COLLECTION_NAME = os.getenv("KB_COLLECTION", "portfolioai-approved-v1")
 MODEL_NAME = os.getenv("KB_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 API_KEY = os.getenv("KB_API_KEY", "change-me")
 MAX_FACTS = int(os.getenv("KB_MAX_FACTS", "2000"))
-GRANTS = json.loads(os.getenv("KB_CALLER_GRANTS", "{}"))
+GRANTS = read_grants()
+PREPROCESSING_VERSION = 'approved-subject-section-fact-v1'
 tenant_rate_limit = TenantRateLimit()
 
 
@@ -319,6 +320,7 @@ def index(req: IndexRequest):
                 "content_hash": hashlib.sha256(fact.text.encode()).hexdigest(),
                 "embedding_model": req.embedding_model,
                 "contract_version": req.contract_version,
+                "preprocessing_version": PREPROCESSING_VERSION,
             }
             for fact in req.facts
         ]
@@ -328,7 +330,8 @@ def index(req: IndexRequest):
         if len(col.get(ids=ids, include=[])["ids"]) != len(ids):
             raise HTTPException(status_code=503, detail="incomplete staged index")
         remaining()
-        state[key] = {"profile_version": req.profile_version, "generation": req.generation, "count": len(ids), "snapshot": digest}
+        state[key] = {"profile_version": req.profile_version, "generation": req.generation, "count": len(ids), "snapshot": digest,
+                      "preprocessing_version": PREPROCESSING_VERSION}
         save_state(state)
         return finish_index(col, req, state[key])
 

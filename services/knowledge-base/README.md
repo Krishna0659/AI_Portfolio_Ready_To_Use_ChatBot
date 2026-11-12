@@ -1,126 +1,107 @@
-# PortfolioAI Knowledge Base
+# PortfolioAI standalone knowledge base
 
-Operational bounds: 1 MiB request body, ten seconds total to receive it (408 on timeout), sixteen in-flight API requests per process (503/Retry-After on overload). Both Compose containers cap RAM at 2 GiB, CPU at two cores and processes at 256, with rotating logs of three 10 MiB files. The API drops Linux capabilities and both containers prevent privilege escalation. These are initial safety caps, not measured capacity guarantees.
+Local, free, backend-only ChromaDB service. Website integration and hosting remain isolated. **Production release is not yet accepted.**
 
-Latest verification: 28 tests, lifecycle smoke and staged-orphan recovery smoke pass. A pinned adapter now supplies Chroma transport timeouts; tenant admission limits are implemented below. Body and transport timeouts do not bound total embedding execution. Clients must reconcile uncertain writes via status or exact replay rather than assuming a timeout means no mutation.
+## Verified on 12 November 2026
 
-## Storage headroom and scoped recovery
+- 33 Python tests passed with no skips: 29 API/state/authorization/limits tests and four real-SDK/worker tests. Installed dependency consistency (`pip check`) passed.
+- Live index/replay/conflict/query/purge and scoped orphan-cleanup smoke tests passed.
+- Actual API-container SIGKILL during a first index: pending state survived, unactivated evidence stayed hidden, reconciliation removed the recorded orphan, and exact replay succeeded.
+- Consistent backup restored into separate containers: three active profiles and twelve purge markers passed. A fixture deleted after backup capture was withdrawn by replaying the current deletion ledger before starting the restored API.
+- AES-256-GCM encryption/decryption matched the original archive byte-for-byte. Wrong keys and modified ciphertext were rejected without producing a plaintext output.
 
-New indexing checks both `/data` and `/chroma-storage` for at least 512 MiB free,
-returning 507 below the reserve or 503 if capacity cannot be read. Compose mounts
-the Chroma volume read-only into the API for this check. Purge, reconciliation
-and exact replay are not blocked by this admission check. The reserve is not a
-hard filesystem quota: other writers, Chroma WAL/index growth and backups can
-consume it, and deletion still requires some writable capacity.
+## Runtime and contract
 
-`POST /v1/reconcile` takes `tenant_id` and `profile_id`. It requires an explicit
-`reconcile` operation in the caller's grant and uses the same tenant/profile
-scope and maintenance rate bucket as other operations. The local purge-authorized
-grants were extended with this permission; future credentials must request it
-explicitly. The service holds the state lock while removing non-active snapshots
-in pages of 200, with at most 50 pages per call. Repeat when `cleanup_pending` is
-true. Legacy profiles preserve their committed generation. Purged profiles retry
-their scoped deletion; missing profile state returns 404 without deleting data.
-No automatic background cleanup is installed.
+Compose publishes no host ports and uses an internal network. One API process/replica only: the state file and in-process lock are not a distributed coordination protocol. Both containers have 2 GiB RAM, two CPUs, 256-process limits and rotated logs. Embeddings run locally in a persistent subprocess; no paid model/API is required.
 
-`smoke_recovery.py` creates a disposable fixture profile, inserts an unactivated
-stage into real Chroma, calls the HTTP recovery endpoint, checks exact active-ID
-preservation and retrieval, then purges the fixture. This passed, as did mocked
-low-space/missing-volume checks and cleanup authorization tests. Actual disk
-exhaustion and forced process death were not simulated. Orphans from a first
-index with no committed profile state remain a separate recovery task.
+All business endpoints require `x-kb-api-key`, a SHA-256 grant, an allowed operation, and an allowed tenant/profile. Readiness uses the separate `KB_API_KEY`. Never give a browser these credentials.
 
-## Consistent local backup and restore drill
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /v1/index` | Stage then activate an approved profile snapshot |
+| `POST /v1/query` | Retrieve active evidence; dense default, optional hybrid |
+| `GET /v1/status` | Inspect durable committed and pending generations |
+| `POST /v1/purge` | Persist withdrawal before deleting scoped vectors |
+| `POST /v1/reconcile` | Retry cleanup while preserving committed evidence |
 
-Run `./services/knowledge-base/restore-drill.ps1` from the repository in PowerShell. It briefly stops only the two KB containers, copies both /data directories as one consistent backup, restarts originals in a finally block, and restores separate isolated containers using the original image IDs. It checks active-profile retrieval and stale replay rejection for existing purge markers. Restored test containers are stopped afterward; backup files and stopped containers remain for inspection. The fixture-scoped credential must authorize the test profiles.
+Indexing writes a pending generation and payload digest before embedding/upsert. Activation replaces it only after staging verification and a remaining-budget check. Conflicting pending or committed replays are rejected. An identical retry is safe; do not increase generation merely because a response timed out. Status can report both an older active snapshot and a newer pending stage. First-stage records have committed generation zero and return no evidence. Reconciliation of such records deletes only the journaled snapshot. Missing state refuses blind deletion. Tombstones remain to reject stale resurrection.
 
-Verified drill: three active profiles and two purge markers survived restore; original API returned healthy afterward. Backup retained under ignored `.local/kb-backup-71ea0fc037db`. It contains resume-derived data and must remain private. This is a same-host test, not protection against loss of the host. Before production use, add encrypted off-host retention and replay deletions occurring after backup capture before opening restored access. No forced power-loss, cross-version restore or post-backup deletion recovery is claimed.
+State replacement fsyncs the file and parent directory on Linux. This is not a proof against every host-power-loss/storage failure. The crash test kills the API container; it does not simulate physical drive failure.
 
-Optional hybrid query: set `mode` to `hybrid` on /v1/query. Default remains `dense`. Hybrid combines dense and BM25 ranks using RRF k=60, up to 20 candidates from each ranking. Both read only the active snapshot and authorized tenant/profile. Lexical scoring scans at most MAX_FACTS records; large-profile latency still requires benchmarking. Distances remain dense distances, not fused scores, and may be null for lexical-only results.
+## Operational bounds
 
-Hybrid evaluation on the unchanged eight-question development set: Recall@3=0.6667, MRR@3=0.6875, mean/max 22.53/48.04 ms. Thirteen tests pass. Because recall stayed unchanged and some ranks regressed, hybrid is optional. No model API or paid dependency was added.
+- Body: 1 MiB, ten seconds to receive; 408/413 on rejection.
+- Admission: sixteen in-flight requests; overload 503 with Retry-After.
+- Response budget: sixty seconds after body reception; 504 on expiry. Threads already performing filesystem/network work are not magically cancelled; staged writes may have uncertain outcomes. Check status and replay exactly.
+- Lock queue: at most five seconds, also bounded by the remaining budget.
+- Embeddings: forty-five seconds including worker startup, shortened by the remaining request budget; timed-out workers are killed and recreated on the next request.
+- Chroma network inactivity: connect/pool three seconds, read/write ten seconds, shortened by remaining budget. Adapter requires exactly Chroma 1.4.1.
+- Per tenant: 1,000 retained profile IDs including tombstones and 10,000 active facts. Replacement accounting occurs before embedding under the state lock. Existing profiles can still be purged at quota.
+- Token buckets per tenant across credentials: query 120/minute with burst 20; index 10/minute with burst 10; purge/status/reconcile share 60/minute with burst 10. Exhaustion returns 429/Retry-After. Buckets reset on restart.
+- New indexing requires 512 MiB free on both volumes. The Chroma volume is mounted read-only into the API for this check. Low space returns 507, unreadable capacity 503. This is an admission reserve, **not a hard filesystem quota**. Other writers and WAL/index growth can consume disk.
+- Cleanup: 200 records/page, at most fifty pages/call; repeat when `cleanup_pending` is true. No background reconciliation is installed.
 
-Latest retrieval update: optional approved `subject` and section labels now contextualize each fact's embedding; returned documents stay unchanged. Republish existing profiles with a higher generation to re-embed; old active snapshots are not automatically rewritten. A formal preprocessing-version migration remains pending.
+## Reproducibility and builds
 
-The unchanged eight-question development set now measures Recall@3=0.6667 and MRR@3=0.6667 (previously 0.50), mean/max latency 15.11/28.12 ms. Ten regressions pass. Research-result and computer-vision misses remain. These are tuning-set results, not independent quality acceptance.
+`Dockerfile` pins the Python image digest, Chroma image digest, embedding model revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, and captured transitive package versions in `constraints.txt`. Preprocessing is recorded as `approved-subject-section-fact-v1`: approved subject + section + individual fact; source evidence text remains unchanged. Existing profiles are not silently re-embedded.
 
-This is the first standalone ChromaDB implementation. It indexes only approved profile projections and exposes no host port by default. The website or another trusted backend must call it with `x-kb-api-key`.
+The clean locked rebuild was attempted but Docker DNS could not resolve the PyTorch download host. The running validation image uses `Dockerfile.offline` / `compose.offline.yml`, based on the previously installed runtime tagged `portfolioai-kb-offline-base:20261112`. This is a local fallback, not a portable verified clean build. Dependency consistency is not a vulnerability scan. Do not claim supply-chain/security acceptance yet.
 
-## Run
+Standard build, from the repository, with private credentials already in the environment:
 
 ```powershell
-Copy-Item .env.example .env
-# Replace KB_API_KEY in .env with a long random value
-docker compose --env-file .env up --build -d
+docker compose -f services/knowledge-base/compose.yml up --build -d
 ```
 
-The image build downloads the local embedding model into /opt/embedding-model. Runtime loads that packaged model with offline mode enabled. Gemini is not required. The model revision and transitive dependencies still need locking before production acceptance.
+Local offline fallback requires the recorded base image to exist:
 
-Local validation on 12 November 2026: real HTTP readiness, resume index/replay, PaySure-first retrieval, unrelated-tenant filtering and five unit tests passed. The running local stack uses a generated environment secret. Configure a durable private .env secret before future Compose recreation.
+```powershell
+docker compose -f services/knowledge-base/compose.yml -f services/knowledge-base/compose.offline.yml up --build -d
+```
 
-Hardening verification: seven unit tests and real HTTP smoke pass staged activation, replay/conflict handling, purge withdrawal and tenant filtering. New snapshots activate only after count verification; old snapshots remain stored but excluded from queries. Legacy snapshots remain readable; republish with a higher generation to adopt the new format.
+Keep readiness credentials and grants outside source control. `.env.example` is not usable production credentials. The live fixture secret is preserved in the container environment; do not print `docker inspect` environment contents into logs.
 
-Business endpoints now require KB_CALLER_GRANTS, a JSON map keyed by the lowercase SHA-256 of each caller secret. Each entry contains `profiles` (tenant ID mapped to allowed profile IDs, or `['*']` for all profiles in that tenant) and `operations` (index, query, purge, status). Missing grants deny all business access. KB_API_KEY grants readiness access only unless its hash is separately configured. Secrets must be high-entropy random values. Configure grants privately before Compose recreation. The running test stack permits only fixture-tenant. Request bodies are capped at 1 MiB, including streamed bodies.
+## Caller credential rotation
 
-Nine unit/HTTP tests and the real Docker smoke pass after authorization changes. Test profiles are purged after successful smoke runs.
+`credentials.py` operates inside the container as a trusted operator. It writes only hashes/scopes to `/data/caller-grants.json`; the API rereads that file for each request and fails closed if invalid. Initial provisioning preserves existing environment grants. Run one provisioning operator at a time.
 
-Production limitations: synchronization supports exactly one process/replica. Credential provisioning/rotation, obsolete snapshot cleanup, full power-loss/restart/restore testing, concurrency and resource limits, timeouts, operation tracking and evaluation metrics remain open. Keep this service disconnected from the website until those acceptance gates pass.
+```text
+python /app/credentials.py --tenant TENANT --profile PROFILE --operation query --key-file /private/new-caller.key
+python /app/credentials.py --revoke-hash OLD_SHA256_HASH
+```
 
-Latest verification: ten tests pass. Activated profiles now clean obsolete snapshots in bounded pages under the write lock; failed cleanup returns cleanup_pending and is retried on exact replay. Two-generation live cleanup and graceful restart of both containers passed. evaluate.py supports prepare then evaluate; run evaluate again after restart without preparing to test persistence. The fixed evaluation profile is test data and may remain locally for repeated checks.
+The key file is created exclusively with mode 0600 and the raw key is never printed. Provision a replacement, transfer it securely to the trusted caller, verify it, then revoke the old hash. Requests already admitted may finish after revocation. This rotates business callers, not the readiness environment secret; rotate readiness by replacing the container environment. Never store operator keys alongside cloud backups.
 
-Eight-question baseline: Recall@3=0.50, MRR@3=0.50, warm mean/max 14.34/26.64 ms; post-restart mean/max 50.08/314.18 ms. This is a small fixture test, not a load benchmark or quality acceptance. Quality improvement, orphan staging reconciliation, forced-crash safety and backup restore remain pending. The older limitation list above is superseded for obsolete snapshot cleanup and graceful restart only.
+## Backups and restore
 
-## Fixture smoke test
+Run `restore-drill.ps1` from this folder/repository in PowerShell. It briefly stops only the two KB containers for a consistent copy, restarts originals in a finally block, makes a disposable fixture deletion after capture, applies the current deletion ledger to restored state, and verifies separate restored containers. Restored containers are stopped after the drill. Originals are never overwritten.
 
-Tenant admission limits (12 November 2026): each tenant may retain 1,000 profile
-IDs (including purge tombstones) and 10,000 active facts. Index admission runs
-under the state lock before embedding or writing; replacement snapshots replace
-their previous active count. Rejected writes return 409. Existing profiles can
-still be purged at capacity; creating a new tombstone consumes a profile slot.
-Exact replay can still finish cleanup at capacity. These logical quotas do not
-cap Chroma WAL, orphan staging records, physical bytes, or backup disk usage.
-Tombstones are not automatically removed because that could permit stale replay.
+For a real restore, obtain the **latest trusted deletion ledger** first and run `replay_deletions.py` offline before exposing the restored API. Reconcile purged profiles to physically remove their stale vectors. If the ledger is unavailable, keep the restored service isolated; an old backup alone cannot prove that data has not since been deleted. Copy the ledger off-host whenever deletion history changes. A same-host drill is not disaster recovery against loss of this computer.
 
-Authenticated requests share tenant token buckets across API credentials:
+`Protect-Backup.ps1` encrypts a consistent TAR archive with AES-256-GCM and a fresh 32-byte recovery key. It refuses overwrite and supports archives up to 512 MiB. The encryption tests are in `test-backup-encryption.ps1`.
 
-| Request class | Refill per minute | Burst |
-| --- | ---: | ---: |
-| Query | 120 | 20 |
-| Index | 10 | 10 |
-| Purge and status combined | 60 | 10 |
+```powershell
+./services/knowledge-base/Protect-Backup.ps1 -Mode Encrypt -InputPath backup.tar -OutputPath backup.kbenc -KeyPath recovery.key
+./services/knowledge-base/Protect-Backup.ps1 -Mode Decrypt -InputPath backup.kbenc -OutputPath verified.tar -KeyPath recovery.key
+```
 
-Exhaustion returns 429 with `Retry-After`. Unauthorized requests do not allocate
-buckets. Buckets reset on process restart and assume the enforced single-worker
-deployment; distributed rate limits are not implemented. Malformed JSON and
-non-string scope IDs return 422 before bucket allocation. Limits live in
-`quotas.py`; workload tuning has not been benchmarked.
+Prepared local artifacts (ignored by Git):
 
-Verification: 21 app/unit tests and 2 real-SDK transport tests passed. The live
-lifecycle smoke passed, and `smoke_quotas.py` verified 429, retry guidance,
-independent status capacity and refill without creating stored data.
+- `.local/portfolioai-backup-20261112.kbenc` — encrypted backup, 1,329,188 bytes.
+- `.local/backup-keys/portfolioai-20261112.key` — recovery key; keep separately, never upload beside the archive.
+- `.local/kb-backup-02d8c0078571/` — original private local snapshot, current deletion ledger and replayed state used by the successful restore drill.
 
-Transport verification (12 November 2026): `chroma_transport.py` applies HTTPX
-connect/pool limits of 3 seconds and read/write inactivity limits of 10 seconds
-before the first Chroma request. The compatibility adapter touches the pinned
-Chroma 1.4.1 request method and refuses other versions; revalidate it on upgrades.
-It does not retry writes automatically. A 503 can leave a write outcome uncertain:
-retry the identical payload/generation, never invent a new generation just because
-the response was lost. Collection initialization can recover after a failed attempt.
+For the user's free off-host setup: create a private Google Drive folder `PortfolioAI-Backups`, check available account storage, upload only the `.kbenc`, and retain the key separately in a recoverable secure location. Google documents up to 15 GB free shared across Drive/Gmail/Photos: https://support.google.com/accounts/answer/6374270?hl=en . No upload or off-host recovery has been performed. Keep the last two verified archives only if they fit; do not delete the last good backup before verifying a replacement.
 
-Verification: 17 app tests plus 2 real-SDK transport tests passed (run
-`python -m unittest test_transport` separately because app tests mock the SDK).
-With the local Chroma container paused, `check_stalled_chroma.py` observed readiness
-503 after 10.03 seconds. Chroma was unpaused and the full smoke test passed.
-These are inactivity limits per network operation, not a total request deadline;
-lock queues, multi-call operations and embedding execution still need bounds.
+## Retrieval quality and remaining acceptance
 
-The Compose file deliberately publishes no host port. Run the smoke test from a trusted backend container or a one-off diagnostic container attached to the `private` network. Do not add a public port mapping to ChromaDB or the KB service.
+The unchanged eight-question development set remains at dense Recall@3/MRR@3 0.6667/0.6667 and hybrid 0.6667/0.6875. Research-result and computer-vision questions still miss relevant evidence. These are tuning fixtures, not an independent held-out acceptance set. The latest run included a cold worker start (~4 seconds); warm hybrid mean/max was ~77/100 ms, not a load-capacity claim.
 
-The request sequence is:
+Release remains blocked on:
 
-1. `POST /v1/index` with `fixtures/krishna-gaur-approved-profile.json`.
-2. `POST /v1/query` with tenant `fixture-tenant`, profile `krishna-gaur`, and query `Which project uses escrow?`.
-3. Repeat the index request and confirm it is safe to replay.
-4. Send a lower-generation request and confirm it returns `409`.
+1. Off-host encrypted copy, independent key custody, and a restore after simulated host loss with a current deletion ledger.
+2. Host-enforced persistent-volume quotas and disk-exhaustion acceptance; the current disk reserve is not a quota.
+3. A clean locked rebuild, dependency vulnerability review/remediation, and workload capacity testing.
+4. Retrieval quality improvements and an independently reviewed evaluation set.
 
-The service intentionally has one worker and a local state file for the initial single-node deployment. Scale-out, distributed locking, and high availability are not claimed.
+Website integration and hosting remain paused. No production-complete claim is made.
