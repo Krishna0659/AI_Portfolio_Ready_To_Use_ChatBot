@@ -22,6 +22,10 @@ Nine unit/HTTP tests and the real Docker smoke pass after authorization changes.
 
 Production limitations: synchronization supports exactly one process/replica. Credential provisioning/rotation, obsolete snapshot cleanup, full power-loss/restart/restore testing, concurrency and resource limits, timeouts, operation tracking and evaluation metrics remain open. Keep this service disconnected from the website until those acceptance gates pass.
 
+Latest verification: ten tests pass. Activated profiles now clean obsolete snapshots in bounded pages under the write lock; failed cleanup returns cleanup_pending and is retried on exact replay. Two-generation live cleanup and graceful restart of both containers passed. evaluate.py supports prepare then evaluate; run evaluate again after restart without preparing to test persistence. The fixed evaluation profile is test data and may remain locally for repeated checks.
+
+Eight-question baseline: Recall@3=0.50, MRR@3=0.50, warm mean/max 14.34/26.64 ms; post-restart mean/max 50.08/314.18 ms. This is a small fixture test, not a load benchmark or quality acceptance. Quality improvement, orphan staging reconciliation, forced-crash safety and backup restore remain pending. The older limitation list above is superseded for obsolete snapshot cleanup and graceful restart only.
+
 ## Fixture smoke test
 
 The Compose file deliberately publishes no host port. Run the smoke test from a trusted backend container or a one-off diagnostic container attached to the `private` network. Do not add a public port mapping to ChromaDB or the KB service.

@@ -22,6 +22,18 @@ import app
 
 
 class KnowledgeBaseTests(unittest.TestCase):
+    def test_cleanup_keeps_active_and_scopes_every_page(self):
+        col = MagicMock()
+        col.get.side_effect = [
+            {'ids': ['old', 'current'], 'metadatas': [{'snapshot': 'old'}, {'snapshot': 'active'}]},
+            {'ids': ['legacy'], 'metadatas': [{}]},
+            {'ids': [], 'metadatas': []}]
+        app.cleanup_snapshots(col, 'tenant-a', 'profile-a', 'active')
+        self.assertEqual([call.kwargs['ids'] for call in col.delete.call_args_list], [['old'], ['legacy']])
+        self.assertEqual([call.kwargs['offset'] for call in col.get.call_args_list], [0, 1, 1])
+        for call in col.get.call_args_list:
+            self.assertEqual(call.kwargs['where'], {'$and': [{'tenant_id': 'tenant-a'}, {'profile_id': 'profile-a'}]})
+
     def setUp(self):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.orig_data_dir = app.DATA_DIR

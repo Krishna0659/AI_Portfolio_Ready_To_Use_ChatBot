@@ -32,6 +32,8 @@ else:
         ids = [row['metadata']['fact_id'] for row in rows]
         assert rows and all(row['metadata']['generation'] == 2 for row in rows)
         expected = set(case['expected_fact_ids'])
+        print(json.dumps({'question': case['question'], 'expected': sorted(expected), 'retrieved': ids,
+            'distances': [row['distance'] for row in rows]}))
         recalls.append(len(expected.intersection(ids)) / len(expected))
         ranks.append(next((1 / rank for rank, fact in enumerate(ids, 1) if fact in expected), 0))
     print(json.dumps({'questions': len(questions), 'recall_at_3': sum(recalls)/len(recalls),
