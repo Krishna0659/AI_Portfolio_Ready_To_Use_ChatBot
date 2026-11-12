@@ -136,3 +136,4 @@ test('GitHub Webhooks: repository removal detaches only the removed repository',
     await fixturePool.query('DELETE FROM accounts WHERE id = $1', [user]);
   }
 });
+
