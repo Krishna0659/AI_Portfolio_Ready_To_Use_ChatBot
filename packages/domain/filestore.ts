@@ -18,9 +18,9 @@ export class FileStore {
   private baseDir: string;
   private quarantineDir: string;
 
-  constructor(baseDir = '.local/objects') {
-    this.baseDir = resolve(baseDir);
-    this.quarantineDir = resolve(join(baseDir, 'quarantine'));
+  constructor(baseDir?: string) {
+    this.baseDir = baseDir ? resolve(baseDir) : join(process.cwd(), '.local', 'objects');
+    this.quarantineDir = join(this.baseDir, 'quarantine');
   }
 
   async init(): Promise<void> {
