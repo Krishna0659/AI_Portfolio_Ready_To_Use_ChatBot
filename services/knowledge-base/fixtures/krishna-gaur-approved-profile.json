@@ -1,0 +1,19 @@
+{
+  "tenant_id": "fixture-tenant",
+  "profile_id": "krishna-gaur",
+  "profile_version": 1,
+  "generation": 1,
+  "contract_version": "approved-profile-v1",
+  "facts": [
+    {"fact_id":"identity-1","section":"identity","text":"Krishna Gaur is a pre-final-year Computer Science student at Bennett University, building scalable microservices and AI-backed systems with Python, TypeScript, React, and Node.js.","source_label":"approved resume"},
+    {"fact_id":"education-1","section":"education","text":"Krishna Gaur is pursuing a B.Tech in Computer Science Engineering at Bennett University from August 2024 to May 2028. The reported CGPA is 8.41 through the fourth semester.","source_label":"approved resume"},
+    {"fact_id":"skills-1","section":"skills","text":"Technical skills include Python, C++, JavaScript, TypeScript, SQL, PyTorch, scikit-learn, OpenCV, YOLOv8, ByteTrack, Stable-Baselines3, React, Node.js, Express, FastAPI, Docker, Redis, MongoDB, RabbitMQ, Socket.IO, system design, microservices, and event-driven architecture.","source_label":"approved resume"},
+    {"fact_id":"experience-1","section":"experience","text":"As a Research Intern in the Department of Mathematical Sciences at IIT BHU from June to July 2026, Krishna benchmarked five portfolio-optimization methods across ten years of data and 100 assets, and built a differentiable PyTorch optimization layer with KKT-based backpropagation.","source_label":"approved resume"},
+    {"fact_id":"experience-2","section":"experience","text":"The research evaluation covered bull, bear, and sideways market regimes. Decision-Focused Learning reduced portfolio regret by 21 percent versus the standard-loss baseline.","source_label":"approved resume"},
+    {"fact_id":"project-1","section":"projects","text":"The CNN-Based Underwater Image Enhancement project combines a CNN-Transformer pipeline with YOLOv8 and ByteTrack. It improved PSNR from 18.26 to 25.97 and SSIM from 0.678 to 0.878, sustaining 14.8 to 18.4 FPS across five adverse underwater conditions.","source_label":"approved resume"},
+    {"fact_id":"project-2","section":"projects","text":"PaySure is an escrow-based payment platform with a nine-table escrow schema, milestone state machine, 24-hour auto-approval SLA, FastAPI backend, Clerk JWT authentication, HMAC-verified Razorpay payments, invoice WebSocket chat, and pytest integration coverage averaging 78 percent.","source_label":"approved resume"},
+    {"fact_id":"project-3","section":"projects","text":"The Zomato Clone is a microservices food-delivery platform with six Node, Express, and TypeScript services, a React 19 frontend, RabbitMQ order flows, Razorpay and Stripe payments, Socket.IO updates, and four user roles. It was verified with 184 Jest and Supertest tests and a k6 result of 5.3 ms p95 latency at 100 concurrent users.","source_label":"approved resume"},
+    {"fact_id":"achievement-1","section":"achievements","text":"Krishna was first runner-up in the AI for Social Good Hackathon at the India AI Impact Summit 2026 among 3,312 teams, and won the GeekCode 2025 DSA contest among 300 students at Bennett University.","source_label":"approved resume"},
+    {"fact_id":"leadership-1","section":"leadership","text":"As Operational Head of Robogenesis at Bennett University, Krishna led a 23-member team for the inaugural DeepSight hackathon, coordinating four sponsors, a 30,000 rupee budget, and 132 participants.","source_label":"approved resume"}
+  ]
+}

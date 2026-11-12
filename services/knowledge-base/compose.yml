@@ -1,0 +1,48 @@
+name: portfolioai-kb
+
+services:
+  chroma:
+    image: chromadb/chroma:1.4.1
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - chroma-data:/data
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/v2/heartbeat || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  knowledge-base:
+    build: .
+    restart: unless-stopped
+    environment:
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      KB_API_KEY: ${KB_API_KEY:?set KB_API_KEY in .env}
+      KB_DATA_DIR: /data
+    depends_on:
+      chroma:
+        condition: service_healthy
+    expose:
+      - "8080"
+    volumes:
+      - kb-data:/data
+      - model-cache:/models
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --header='x-kb-api-key: $${KB_API_KEY}' http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+
+networks:
+  private:
+    internal: true
+
+volumes:
+  chroma-data:
+  kb-data:
+  model-cache:

@@ -1,0 +1,10 @@
+[
+  {"question":"What is Krishna Gaur studying and what is his reported CGPA?","expected_fact_ids":["education-1"]},
+  {"question":"Which project demonstrates payment and escrow engineering?","expected_fact_ids":["project-2"]},
+  {"question":"What was the strongest result from Krishna's IIT BHU research internship?","expected_fact_ids":["experience-2"]},
+  {"question":"What technologies are used in the Zomato Clone?","expected_fact_ids":["project-3","skills-1"]},
+  {"question":"What computer-vision work has Krishna done?","expected_fact_ids":["project-1"]},
+  {"question":"What leadership experience does Krishna have?","expected_fact_ids":["leadership-1"]},
+  {"question":"Which achievements show competitive performance?","expected_fact_ids":["achievement-1"]},
+  {"question":"What backend and infrastructure technologies does Krishna know?","expected_fact_ids":["skills-1","project-2","project-3"]}
+]
