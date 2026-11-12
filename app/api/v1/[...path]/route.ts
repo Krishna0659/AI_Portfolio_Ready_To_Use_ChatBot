@@ -8,6 +8,8 @@ import {session,mutation,cookieName} from '../../../../packages/domain/auth';
 import {authorizedTransaction} from '../../../../packages/domain/authorization';
 import {profileSchema,emptyProfile,hash,markdown,Profile} from '../../../../packages/contracts/profile';
 import {safeUrl,githubReadme} from '../../../../services/fetch-broker/fetch';
+import {defaultFileStore} from '../../../../packages/domain/filestore';
+import {validateUpload} from '../../../../packages/domain/upload-validator';
 export const runtime='nodejs';
 const fail=(message:string,status=400)=>{throw Object.assign(Error(message),{status});};
 async function body(req:Request){const reader=req.body?.getReader();if(!reader)return {};let size=0;const chunks=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>1048576){await reader.cancel();fail('Request too large',413);}chunks.push(value);}return JSON.parse(Buffer.concat(chunks).toString());}
@@ -23,9 +25,12 @@ async function handler(req:Request,ctx:Context){try{const s=await session();if(!
  // Bound the full multipart body before parsing; content-length alone is untrusted.
  const reader=req.body!.getReader();let size=0;const chunks=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>11*1024*1024){await reader.cancel();fail('Upload exceeds 10 MB',413);}chunks.push(value);}
  const form=await new Response(Buffer.concat(chunks),{headers:{'Content-Type':req.headers.get('content-type')??''}}).formData();const file=form.get('file');if(!(file instanceof File)||form.get('consent')!=='true')fail('Choose a file and confirm import consent');
- const upload=file as File;const ext=upload.name.split('.').pop()?.toLowerCase();if(!['docx','pdf','txt','md'].includes(ext??'')||upload.size<1||upload.size>10485760)fail('Use a DOCX, PDF, TXT or Markdown file up to 10 MB');
- const locator=`${randomUUID()}.${ext}`,id=randomUUID();await mkdir('.local/objects',{recursive:true});await writeFile(`.local/objects/${locator}`,Buffer.from(await upload.arrayBuffer()),{flag:'wx'});
- try{await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{await db.query('SELECT tenant_id FROM drafts FOR UPDATE');const count=Number((await db.query('SELECT count(*) FROM sources')).rows[0].count);if(count>=10)fail('Maximum 10 sources per workspace');await db.query('INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,\'upload\',$3,$4)',[id,tenant,upload.name.slice(0,200),locator]);await db.query('INSERT INTO jobs(id,tenant_id,source_id) VALUES($1,$2,$3)',[randomUUID(),tenant,id]);});}catch(e){await unlink(`.local/objects/${locator}`).catch(()=>{});throw e;}return NextResponse.json({id});}
+ const upload=file as File;const ext=upload.name.split('.').pop()?.toLowerCase();
+ const buffer=Buffer.from(await upload.arrayBuffer());
+ const validated=validateUpload(buffer,ext??'');
+ const locator=`${randomUUID()}.${validated.ext}`,id=randomUUID();
+ await defaultFileStore.putImmutable(locator,buffer);
+ try{await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{await db.query('SELECT tenant_id FROM drafts FOR UPDATE');const count=Number((await db.query('SELECT count(*) FROM sources')).rows[0].count);if(count>=10)fail('Maximum 10 sources per workspace');await db.query('INSERT INTO sources(id,tenant_id,kind,label,locator) VALUES($1,$2,\'upload\',$3,$4)',[id,tenant,upload.name.slice(0,200),locator]);await db.query('INSERT INTO jobs(id,tenant_id,source_id) VALUES($1,$2,$3)',[randomUUID(),tenant,id]);});}catch(e){await defaultFileStore.delete(locator).catch(()=>{});throw e;}return NextResponse.json({id});}
  const data=await body(req);
  if(route==='account/erase'){z.object({confirm:z.literal('DELETE MY ACCOUNT')}).strict().parse(data);const result=await eraseAccount(tenant,s.user_id,s.token_hash);(await cookies()).delete(cookieName);return NextResponse.json(result,{status:202});}
  return await authorizedTransaction(tenant,s.user_id,req.method!=='GET',async db=>{
