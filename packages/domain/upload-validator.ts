@@ -74,3 +74,4 @@ export function validateUpload(buffer: Buffer, rawExt: string): ValidatedUpload 
       throw Object.assign(Error('Unsupported file type'), {status: 400});
   }
 }
+

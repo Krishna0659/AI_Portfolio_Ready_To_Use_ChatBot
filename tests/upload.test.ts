@@ -60,3 +60,4 @@ test('validateUpload: rejects disguised or corrupted files missing magic bytes',
     /Unsupported file type/
   );
 });
+
