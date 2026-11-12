@@ -8,6 +8,28 @@ app = test_app.app
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_first_stage_is_durable_recoverable_and_payload_bound(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder, patch.object(app, 'DATA_DIR', Path(folder)), patch.object(app, 'STATE_PATH', Path(folder) / 'state.json'):
+            req = app.IndexRequest(tenant_id='t', profile_id='p', generation=2, profile_version=1,
+                facts=[app.Fact(fact_id='f', section='skills', text='Python')])
+            col, model = MagicMock(), MagicMock()
+            model.encode.side_effect = app.HTTPException(504, 'timeout')
+            with patch.object(app, 'resources', return_value=(col, model)):
+                with self.assertRaises(app.HTTPException):
+                    app.index(req)
+                pending = app.load_state()['t:p']['pending']
+                self.assertEqual(pending['generation'], 2)
+                self.assertEqual(app.query(app.QueryRequest(tenant_id='t', profile_id='p', query='skills')), {'results': []})
+                with self.assertRaises(app.HTTPException) as failure:
+                    app.index(req.model_copy(update={'subject': 'different'}))
+                self.assertEqual(failure.exception.status_code, 409)
+                app.reconcile(app.ReconcileRequest(tenant_id='t', profile_id='p'))
+                col.delete.assert_called_once_with(where={'$and': [{'tenant_id': 't'}, {'profile_id': 'p'}, {'snapshot': pending['snapshot']}]})
+                with self.assertRaises(app.HTTPException):
+                    app.purge(app.PurgeRequest(tenant_id='t', profile_id='p', generation=1))
+
     def test_low_disk_rejects_before_embedding_or_write(self):
         request = app.IndexRequest(tenant_id='t', profile_id='p', generation=1, profile_version=1,
                                   facts=[app.Fact(fact_id='f', section='skills', text='Python')])

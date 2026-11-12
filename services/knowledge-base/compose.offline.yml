@@ -1,0 +1,4 @@
+services:
+  knowledge-base:
+    build:
+      dockerfile: Dockerfile.offline

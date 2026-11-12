@@ -1,0 +1,4 @@
+# Local validation only: this tag must point to the previously verified runtime.
+FROM portfolioai-kb-offline-base:20261112
+COPY app.py ranking.py chroma_transport.py quotas.py execution.py credentials.py /app/
+COPY fixtures /app/fixtures

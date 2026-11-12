@@ -229,7 +229,9 @@ class KnowledgeBaseTests(unittest.TestCase):
             col.upsert.side_effect = RuntimeError("interrupted write")
             with self.assertRaises(RuntimeError):
                 app.index(req.model_copy(update={"generation": 2, "profile_version": 2}))
-            self.assertEqual(app.load_state(), original)
+            after = app.load_state()
+            self.assertEqual({k: v for k, v in after['t:p'].items() if k != 'pending'}, original['t:p'])
+            self.assertEqual(after['t:p']['pending']['generation'], 2)
             col.delete.assert_not_called()
 
     def test_failed_purge_withdraws_queries(self):

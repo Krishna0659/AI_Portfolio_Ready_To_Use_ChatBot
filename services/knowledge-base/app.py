@@ -18,7 +18,8 @@ from chroma_transport import configure_transport
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-from sentence_transformers import SentenceTransformer
+from execution import EmbeddingWorker, acquire, deadline, remaining
+from credentials import read_grants
 from ranking import lexical, fuse
 from quotas import check_storage, TenantRateLimit
 
@@ -38,6 +39,7 @@ class BodyLimit:
         self.active = 0
         self.max_active = 16
         self.body_timeout = 10
+        self.request_timeout = 60
 
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
@@ -52,10 +54,10 @@ class BodyLimit:
 
     async def handle(self, scope, receive, send):
         body = bytearray()
-        deadline = time.monotonic() + self.body_timeout
+        body_deadline = time.monotonic() + self.body_timeout
         while True:
             try:
-                message = await asyncio.wait_for(receive(), timeout=max(0, deadline - time.monotonic()))
+                message = await asyncio.wait_for(receive(), timeout=max(0, body_deadline - time.monotonic()))
             except asyncio.TimeoutError:
                 return await JSONResponse({'detail': 'request body timed out'}, status_code=408)(scope, receive, send)
             if message['type'] == 'http.disconnect':
@@ -72,7 +74,20 @@ class BodyLimit:
                 return await receive()
             delivered = True
             return {'type': 'http.request', 'body': bytes(body), 'more_body': False}
-        await self.app(scope, replay, send)
+        token = deadline.set(time.monotonic() + self.request_timeout)
+        started = False
+        async def tracked_send(message):
+            nonlocal started
+            if message['type'] == 'http.response.start':
+                started = True
+            await send(message)
+        try:
+            await asyncio.wait_for(self.app(scope, replay, tracked_send), timeout=self.request_timeout)
+        except asyncio.TimeoutError:
+            if not started:
+                await JSONResponse({'detail': 'operation deadline exceeded; check status before retrying'}, status_code=504)(scope, replay, send)
+        finally:
+            deadline.reset(token)
 
 app = FastAPI(title="PortfolioAI Knowledge Base", version="1.0.0")
 app.add_middleware(BodyLimit)
@@ -87,7 +102,7 @@ async def transport_unavailable(request, exc):
 lock = threading.RLock()
 client: chromadb.HttpClient | None = None
 collection = None
-embedder: SentenceTransformer | None = None
+embedder: EmbeddingWorker | None = None
 
 
 class Fact(BaseModel):
@@ -144,7 +159,11 @@ def require_key(x_kb_api_key: str | None = Header(default=None)) -> None:
 
 async def require_scope(request: Request, x_kb_api_key: str | None = Header(default=None)):
     digest = hashlib.sha256((x_kb_api_key or '').encode()).hexdigest()
-    grant = GRANTS.get(digest)
+    try:
+        grants = read_grants() if (DATA_DIR / 'caller-grants.json').exists() else GRANTS
+    except (OSError, ValueError):
+        raise HTTPException(503, 'caller authorization configuration unavailable')
+    grant = grants.get(digest)
     if not grant:
         raise HTTPException(status_code=401, detail="invalid caller credentials")
     operation = request.url.path.rsplit('/', 1)[-1]
@@ -176,12 +195,18 @@ def save_state(state: dict[str, dict[str, int]]) -> None:
         stream.flush()
         os.fsync(stream.fileno())
     tmp.replace(STATE_PATH)
+    if os.name != 'nt':
+        directory = os.open(DATA_DIR, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
 
 
 def serialized(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):
-        with lock:
+        with acquire(lock):
             return fn(*args, **kwargs)
     return wrapped
 
@@ -227,7 +252,7 @@ def resources():
             metadata={"hnsw:space": "cosine", "contract_version": "approved-profile-v1", "embedding_model": MODEL_NAME},
         )
     if embedder is None:
-        embedder = SentenceTransformer(os.getenv("KB_MODEL_PATH", MODEL_NAME))
+        embedder = EmbeddingWorker(os.getenv("KB_MODEL_PATH", MODEL_NAME))
     return collection, embedder
 
 
@@ -249,7 +274,7 @@ def ready(_: None = Depends(require_key)):
 @app.post("/v1/index", dependencies=[Depends(require_scope)])
 def index(req: IndexRequest):
     key = f"{req.tenant_id}:{req.profile_id}"
-    with lock:
+    with acquire(lock):
         state = load_state()
         current = state.get(key)
         digest = hashlib.sha256(json.dumps(req.model_dump(), sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -266,9 +291,19 @@ def index(req: IndexRequest):
             return finish_index(col, req, current)
         if current and req.profile_version < current["profile_version"]:
             raise HTTPException(status_code=409, detail="stale profile version")
+        staged = (current or {}).get('pending')
+        if staged and (req.generation < staged['generation'] or
+                       (req.generation == staged['generation'] and staged['snapshot'] != digest)):
+            raise HTTPException(409, 'pending generation payload conflict')
         check_storage(state, req.tenant_id, req.profile_id, len(req.facts))
         check_disk_space()
         col, model = resources()
+        if staged:
+            # Remove only IDs belonging to the recorded interrupted stage.
+            col.delete(where={'$and': [{'tenant_id': req.tenant_id}, {'profile_id': req.profile_id}, {'snapshot': staged['snapshot']}]})
+        state[key] = {**(current or {'generation': 0, 'profile_version': 0, 'count': 0}),
+                      'pending': {'generation': req.generation, 'snapshot': digest}}
+        save_state(state)
         ids = [f"{req.tenant_id}:{req.profile_id}:{digest}:{fact.fact_id}" for fact in req.facts]
         documents = [fact.text for fact in req.facts]
         metadata = [
@@ -292,6 +327,7 @@ def index(req: IndexRequest):
         col.upsert(ids=ids, documents=documents, metadatas=metadata, embeddings=vectors)
         if len(col.get(ids=ids, include=[])["ids"]) != len(ids):
             raise HTTPException(status_code=503, detail="incomplete staged index")
+        remaining()
         state[key] = {"profile_version": req.profile_version, "generation": req.generation, "count": len(ids), "snapshot": digest}
         save_state(state)
         return finish_index(col, req, state[key])
@@ -320,7 +356,11 @@ def reconcile(req: ReconcileRequest):
     if not current.get('purged') and not current.get('snapshot') and 'generation' not in current:
         raise HTTPException(503, 'profile index state incomplete')
     col, _ = resources()
-    if current.get('purged'):
+    if current.get('pending') and current.get('generation') == 0:
+        col.delete(where={'$and': [{'tenant_id': req.tenant_id}, {'profile_id': req.profile_id},
+                                 {'snapshot': current['pending']['snapshot']}]})
+        pending = False
+    elif current.get('purged'):
         col.delete(where={'$and': [{'tenant_id': req.tenant_id}, {'profile_id': req.profile_id}]})
         pending = False
     else:
@@ -332,7 +372,7 @@ def reconcile(req: ReconcileRequest):
 @app.get("/v1/status", dependencies=[Depends(require_scope)])
 def status(tenant_id: str, profile_id: str):
     key = f"{tenant_id}:{profile_id}"
-    with lock:
+    with acquire(lock):
         state = load_state()
         current = state.get(key)
         if not current:
@@ -343,10 +383,10 @@ def status(tenant_id: str, profile_id: str):
 @app.post("/v1/purge", dependencies=[Depends(require_scope)])
 def purge(req: PurgeRequest):
     key = f"{req.tenant_id}:{req.profile_id}"
-    with lock:
+    with acquire(lock):
         state = load_state()
         current = state.get(key)
-        if current and req.generation < current["generation"]:
+        if current and req.generation < max(current["generation"], current.get('pending', {}).get('generation', 0)):
             raise HTTPException(status_code=409, detail="stale purge generation")
         # Existing profiles can always be withdrawn, even if limits were lowered.
         if current is None:
@@ -362,7 +402,7 @@ def purge(req: PurgeRequest):
 @serialized
 def query(req: QueryRequest):
     current = load_state().get(f"{req.tenant_id}:{req.profile_id}")
-    if not current or current.get("purged"):
+    if not current or current.get("purged") or current.get('generation') == 0:
         return {"results": []}
     filters = [{"tenant_id": req.tenant_id}, {"profile_id": req.profile_id}]
     if current.get("snapshot"):

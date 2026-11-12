@@ -2,6 +2,7 @@
 from functools import wraps
 
 import httpx
+from execution import remaining
 
 TIMEOUT = httpx.Timeout(connect=3, read=10, write=10, pool=3)
 
@@ -18,7 +19,8 @@ def configure_transport():
 
     @wraps(original)
     def bounded(self, method, path, **kwargs):
-        kwargs['timeout'] = TIMEOUT
+        budget = remaining()
+        kwargs['timeout'] = httpx.Timeout(**{key: min(value, budget) for key, value in TIMEOUT.as_dict().items()})
         return original(self, method, path, **kwargs)
 
     bounded._kb_bounded = True
