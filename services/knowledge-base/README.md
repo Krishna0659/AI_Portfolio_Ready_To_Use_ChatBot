@@ -10,7 +10,11 @@ Copy-Item .env.example .env
 docker compose --env-file .env up --build -d
 ```
 
-The first startup downloads the pinned local embedding model into the named model volume. Gemini is not required. It can be added later only to generate final answers after retrieval; it must not be used for indexing identity facts.
+The image build downloads the local embedding model into /opt/embedding-model. Runtime loads that packaged model with offline mode enabled. Gemini is not required. The model revision and transitive dependencies still need locking before production acceptance.
+
+Local validation on 12 November 2026: real HTTP readiness, resume index/replay, PaySure-first retrieval, unrelated-tenant filtering and five unit tests passed. The running local stack uses a generated environment secret. Configure a durable private .env secret before future Compose recreation.
+
+Production limitations: the shared key trusts the backend to authorize tenant IDs; replacement indexing is not atomic; conflicting same-generation payloads are not rejected yet. Restore testing, resource limits and evaluation metrics remain open. Keep this service disconnected from the website until those acceptance gates pass.
 
 ## Fixture smoke test
 

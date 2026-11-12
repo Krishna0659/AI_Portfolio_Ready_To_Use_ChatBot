@@ -89,6 +89,7 @@ class KnowledgeBaseTests(unittest.TestCase):
     def test_generation_fencing_index(self):
         mock_col = MagicMock()
         mock_model = MagicMock()
+        mock_col.get.return_value = {"ids": ["f2"]}
         mock_model.encode.return_value = MagicMock(tolist=lambda: [[0.1, 0.2]])
 
         # Prepopulate state with generation 5
@@ -144,9 +145,15 @@ class KnowledgeBaseTests(unittest.TestCase):
             self.assertEqual(res["status"], "purged")
 
         state = app.load_state()
-        self.assertNotIn("tenant-1:profile-1", state)
+        self.assertTrue(state["tenant-1:profile-1"]["purged"])
+        replay = app.IndexRequest(tenant_id="tenant-1", profile_id="profile-1", profile_version=2, generation=5,
+            facts=[app.Fact(section="Exp", text="Deleted", fact_id="f1")])
+        with self.assertRaises(app.HTTPException) as ctx:
+            app.index(replay)
+        self.assertEqual(ctx.exception.status_code, 409)
 
     def test_query_isolation_and_filtering(self):
+        app.save_state({"t1:p1": {"generation": 1, "snapshot": "active"}})
         mock_col = MagicMock()
         mock_model = MagicMock()
         mock_model.encode.return_value = MagicMock(tolist=lambda: [[0.5, 0.5]])
@@ -168,8 +175,51 @@ class KnowledgeBaseTests(unittest.TestCase):
             _, kwargs = mock_col.query.call_args
             self.assertEqual(
                 kwargs["where"],
-                {"$and": [{"tenant_id": "t1"}, {"profile_id": "p1"}]},
+                {"$and": [{"tenant_id": "t1"}, {"profile_id": "p1"}, {"snapshot": "active"}]},
             )
+
+    def test_failed_stage_preserves_active_and_conflicting_replay(self):
+        col, model = MagicMock(), MagicMock()
+        model.encode.return_value.tolist.return_value = [[0.1, 0.2]]
+        col.get.return_value = {"ids": ["f1"]}
+        req = app.IndexRequest(tenant_id="t", profile_id="p", profile_version=1, generation=1,
+            facts=[app.Fact(section="skills", text="Python", fact_id="f1")])
+        with patch.object(app, "resources", return_value=(col, model)):
+            app.index(req)
+            original = app.load_state()
+            app.index(req)
+            self.assertEqual(col.upsert.call_count, 1)
+            changed = req.model_copy(update={"facts": [app.Fact(section="skills", text="Java", fact_id="f1")]})
+            with self.assertRaises(app.HTTPException):
+                app.index(changed)
+            col.upsert.side_effect = RuntimeError("interrupted write")
+            with self.assertRaises(RuntimeError):
+                app.index(req.model_copy(update={"generation": 2, "profile_version": 2}))
+            self.assertEqual(app.load_state(), original)
+            col.delete.assert_not_called()
+
+    def test_failed_purge_withdraws_queries(self):
+        app.save_state({"t:p": {"generation": 1, "profile_version": 1}})
+        col = MagicMock()
+        col.delete.side_effect = RuntimeError("offline")
+        with patch.object(app, "resources", return_value=(col, None)):
+            with self.assertRaises(RuntimeError):
+                app.purge(app.PurgeRequest(tenant_id="t", profile_id="p", generation=2))
+            self.assertEqual(app.query(app.QueryRequest(tenant_id="t", profile_id="p", query="skills")), {"results": []})
+
+
+    def test_status_endpoint(self):
+        with self.assertRaises(app.HTTPException) as ctx:
+            app.status(tenant_id="unknown-t", profile_id="unknown-p")
+        self.assertEqual(ctx.exception.status_code, 404)
+
+        app.save_state({"t1:p1": {"profile_version": 2, "generation": 4, "count": 10, "snapshot": "snap123"}})
+        res = app.status(tenant_id="t1", profile_id="p1")
+        self.assertEqual(res["status"], "ok")
+        self.assertEqual(res["tenant_id"], "t1")
+        self.assertEqual(res["profile_id"], "p1")
+        self.assertEqual(res["generation"], 4)
+        self.assertEqual(res["count"], 10)
 
 
 if __name__ == "__main__":

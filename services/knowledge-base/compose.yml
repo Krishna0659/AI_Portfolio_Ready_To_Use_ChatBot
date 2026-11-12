@@ -9,11 +9,6 @@ services:
     volumes:
       - chroma-data:/data
     networks: [private]
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/v2/heartbeat || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 12
 
   knowledge-base:
     build: .
@@ -25,7 +20,7 @@ services:
       KB_DATA_DIR: /data
     depends_on:
       chroma:
-        condition: service_healthy
+        condition: service_started
     expose:
       - "8080"
     volumes:
@@ -33,7 +28,7 @@ services:
       - model-cache:/models
     networks: [private]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- --header='x-kb-api-key: $${KB_API_KEY}' http://localhost:8080/health/ready || exit 1"]
+      test: ["CMD", "python", "-c", "import os,urllib.request; urllib.request.urlopen(urllib.request.Request('http://localhost:8080/health/ready',headers={'x-kb-api-key':os.environ['KB_API_KEY']}),timeout=8)"]
       interval: 30s
       timeout: 10s
       retries: 6
