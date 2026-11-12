@@ -107,3 +107,4 @@ test('TR15 KnowledgeBaseClient: Mock adapter enforces consent and generation ord
   assert.equal(state2.status, 'purged');
   assert.equal(state2.generation, 2);
 });
+

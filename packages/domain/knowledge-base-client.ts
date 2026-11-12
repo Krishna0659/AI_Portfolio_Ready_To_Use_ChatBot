@@ -175,3 +175,4 @@ export class KnowledgeBaseClient {
 }
 
 export const defaultKnowledgeBaseClient = new KnowledgeBaseClient();
+

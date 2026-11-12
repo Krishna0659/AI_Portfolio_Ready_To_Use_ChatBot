@@ -1,5 +1,9 @@
 # PortfolioAI Knowledge Base
 
+Operational bounds: 1 MiB request body, ten seconds total to receive it (408 on timeout), sixteen in-flight API requests per process (503/Retry-After on overload). Both Compose containers cap RAM at 2 GiB, CPU at two cores and processes at 256, with rotating logs of three 10 MiB files. The API drops Linux capabilities and both containers prevent privilege escalation. These are initial safety caps, not measured capacity guarantees.
+
+Fifteen tests and live smoke pass under these caps. Body timeout does not cancel embedding execution or Chroma calls: the pinned Chroma SDK internally configures HTTP timeout=None. Transport/compute deadlines and per-tenant quotas remain release blockers. Clients must reconcile uncertain writes via status or exact replay rather than assuming a timeout means no mutation.
+
 ## Consistent local backup and restore drill
 
 Run `./services/knowledge-base/restore-drill.ps1` from the repository in PowerShell. It briefly stops only the two KB containers, copies both /data directories as one consistent backup, restarts originals in a finally block, and restores separate isolated containers using the original image IDs. It checks active-profile retrieval and stale replay rejection for existing purge markers. Restored test containers are stopped afterward; backup files and stopped containers remain for inspection. The fixture-scoped credential must authorize the test profiles.
