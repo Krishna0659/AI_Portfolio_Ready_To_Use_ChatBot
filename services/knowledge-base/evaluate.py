@@ -14,7 +14,7 @@ def call(path, body):
         return json.load(response)
 
 profile = json.loads(Path('/app/fixtures/krishna-gaur-approved-profile.json').read_text())
-profile['profile_id'] = 'recovery-evaluation-v1'
+profile['profile_id'] = 'recovery-evaluation-context-v2'
 if sys.argv[1] == 'prepare':
     for generation in (1, 2):
         profile.update(generation=generation, profile_version=generation)
@@ -27,7 +27,7 @@ else:
     for case in questions:
         start = time.perf_counter()
         rows = call('query', {'tenant_id': profile['tenant_id'], 'profile_id': profile['profile_id'],
-            'query': case['question'], 'top_k': 3})['results']
+            'query': case['question'], 'top_k': 3, 'mode': sys.argv[2] if len(sys.argv) > 2 else 'dense'})['results']
         timings.append((time.perf_counter() - start) * 1000)
         ids = [row['metadata']['fact_id'] for row in rows]
         assert rows and all(row['metadata']['generation'] == 2 for row in rows)

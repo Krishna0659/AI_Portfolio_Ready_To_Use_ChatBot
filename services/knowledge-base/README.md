@@ -1,5 +1,9 @@
 # PortfolioAI Knowledge Base
 
+Latest retrieval update: optional approved `subject` and section labels now contextualize each fact's embedding; returned documents stay unchanged. Republish existing profiles with a higher generation to re-embed; old active snapshots are not automatically rewritten. A formal preprocessing-version migration remains pending.
+
+The unchanged eight-question development set now measures Recall@3=0.6667 and MRR@3=0.6667 (previously 0.50), mean/max latency 15.11/28.12 ms. Ten regressions pass. Research-result and computer-vision misses remain. These are tuning-set results, not independent quality acceptance.
+
 This is the first standalone ChromaDB implementation. It indexes only approved profile projections and exposes no host port by default. The website or another trusted backend must call it with `x-kb-api-key`.
 
 ## Run

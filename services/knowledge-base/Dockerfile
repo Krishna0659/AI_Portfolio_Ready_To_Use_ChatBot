@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').save('/opt/embedding-model')"
 ENV KB_MODEL_PATH=/opt/embedding-model HF_HUB_OFFLINE=1
 COPY app.py .
+COPY ranking.py .
 COPY fixtures ./fixtures
 RUN mkdir -p /data /models/cache && chown -R app:app /app /data /models /opt/embedding-model
 USER app

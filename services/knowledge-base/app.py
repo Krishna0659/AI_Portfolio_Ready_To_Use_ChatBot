@@ -14,6 +14,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from sentence_transformers import SentenceTransformer
+from ranking import lexical, fuse
 
 DATA_DIR = Path(os.getenv("KB_DATA_DIR", "/data"))
 STATE_PATH = DATA_DIR / "index-state.json"
@@ -66,6 +67,7 @@ class Fact(BaseModel):
 
 
 class IndexRequest(BaseModel):
+    subject: str = Field(default="", max_length=120)
     operation: Literal["index"] = "index"
     tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     profile_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
@@ -92,6 +94,7 @@ class PurgeRequest(BaseModel):
 
 
 class QueryRequest(BaseModel):
+    mode: Literal['dense', 'hybrid'] = 'dense'
     tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     profile_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     query: str = Field(min_length=1, max_length=1000)
@@ -233,7 +236,8 @@ def index(req: IndexRequest):
             }
             for fact in req.facts
         ]
-        vectors = model.encode(documents, normalize_embeddings=True).tolist()
+        embedding_inputs = [f"Profile: {req.subject}\nSection: {fact.section}\n{fact.text}" for fact in req.facts]
+        vectors = model.encode(embedding_inputs, normalize_embeddings=True).tolist()
         col.upsert(ids=ids, documents=documents, metadatas=metadata, embeddings=vectors)
         if len(col.get(ids=ids, include=[])["ids"]) != len(ids):
             raise HTTPException(status_code=503, detail="incomplete staged index")
@@ -283,11 +287,22 @@ def query(req: QueryRequest):
     vector = model.encode([req.query], normalize_embeddings=True).tolist()
     result = col.query(
         query_embeddings=vector,
-        n_results=req.top_k,
+        n_results=20 if req.mode == 'hybrid' else req.top_k,
         where={"$and": filters},
         include=["documents", "metadatas", "distances"],
     )
     rows = []
     for doc, meta, distance in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
         rows.append({"text": doc, "metadata": meta, "distance": distance})
+    if req.mode == 'hybrid':
+        corpus = col.get(where={"$and": filters}, limit=MAX_FACTS + 1, include=['documents', 'metadatas'])
+        if len(corpus['ids']) > MAX_FACTS:
+            raise HTTPException(status_code=503, detail='profile exceeds hybrid retrieval limit')
+        ranked = lexical(req.query, [meta['section'] + ' ' + doc for meta, doc in zip(corpus['metadatas'], corpus['documents'])])[:20]
+        ordered = fuse(result['ids'][0], [corpus['ids'][i] for i in ranked])
+        records = {record_id: {'text': doc, 'metadata': meta, 'distance': None}
+            for record_id, doc, meta in zip(corpus['ids'], corpus['documents'], corpus['metadatas'])}
+        for record_id, row in zip(result['ids'][0], rows):
+            records[record_id] = row
+        rows = [records[record_id] for record_id in ordered[:req.top_k]]
     return {"results": rows}
