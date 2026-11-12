@@ -4,6 +4,8 @@ Last updated: 12 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] 12 November: Phase 2 Knowledge Base Service hardening & Generation Fencing: Updated ChromaDB FastAPI service with conflicting same-generation replay rejection using deterministic JSON payload digests (`snapshot`), retained purge tombstone generation state to prevent stale profile resurrection, and offline CPU embedding integration. Added `/v1/status` endpoint for durable index state polling. Fixture smoke verified readiness, resume indexing, replay, PaySure retrieval, and tenant filtering.
+
 - [x] 12 November: built and started the private local ChromaDB stack. Packaged CPU embeddings into the image for offline runtime, corrected model file permissions and Python health checks. Live HTTP smoke passed readiness, resume indexing/replay, PaySure-first retrieval and unrelated-tenant filtering. Five unit tests passed, including retained purge generation preventing stale resurrection. No public ports or website integration enabled.
 
 - [x] Phase 2 Profiles lineage & ChromaDB knowledge base service: added `base_version_id` to versions table for approval DAG tracking, `exports` tracking table with tenant RLS and audit, total facts <= 500 limit and canonical JSON 1 MB check in `packages/contracts/profile.ts`, expandable version inspection in the dashboard UI. Verified 40 automated Node tests passing (including lineage and export RLS isolation tests), 7 extraction parser tests, and 5 automated Python unit tests passing for the standalone ChromaDB knowledge-base service (`services/knowledge-base/test_app.py`) verifying API authentication, request validation, generation fencing on index/purge, and tenant query isolation.
