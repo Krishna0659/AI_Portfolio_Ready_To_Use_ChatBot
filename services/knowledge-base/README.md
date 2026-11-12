@@ -2,7 +2,33 @@
 
 Operational bounds: 1 MiB request body, ten seconds total to receive it (408 on timeout), sixteen in-flight API requests per process (503/Retry-After on overload). Both Compose containers cap RAM at 2 GiB, CPU at two cores and processes at 256, with rotating logs of three 10 MiB files. The API drops Linux capabilities and both containers prevent privilege escalation. These are initial safety caps, not measured capacity guarantees.
 
-Fifteen tests and live smoke pass under these caps. Body timeout does not cancel embedding execution or Chroma calls: the pinned Chroma SDK internally configures HTTP timeout=None. Transport/compute deadlines and per-tenant quotas remain release blockers. Clients must reconcile uncertain writes via status or exact replay rather than assuming a timeout means no mutation.
+Latest verification: 28 tests, lifecycle smoke and staged-orphan recovery smoke pass. A pinned adapter now supplies Chroma transport timeouts; tenant admission limits are implemented below. Body and transport timeouts do not bound total embedding execution. Clients must reconcile uncertain writes via status or exact replay rather than assuming a timeout means no mutation.
+
+## Storage headroom and scoped recovery
+
+New indexing checks both `/data` and `/chroma-storage` for at least 512 MiB free,
+returning 507 below the reserve or 503 if capacity cannot be read. Compose mounts
+the Chroma volume read-only into the API for this check. Purge, reconciliation
+and exact replay are not blocked by this admission check. The reserve is not a
+hard filesystem quota: other writers, Chroma WAL/index growth and backups can
+consume it, and deletion still requires some writable capacity.
+
+`POST /v1/reconcile` takes `tenant_id` and `profile_id`. It requires an explicit
+`reconcile` operation in the caller's grant and uses the same tenant/profile
+scope and maintenance rate bucket as other operations. The local purge-authorized
+grants were extended with this permission; future credentials must request it
+explicitly. The service holds the state lock while removing non-active snapshots
+in pages of 200, with at most 50 pages per call. Repeat when `cleanup_pending` is
+true. Legacy profiles preserve their committed generation. Purged profiles retry
+their scoped deletion; missing profile state returns 404 without deleting data.
+No automatic background cleanup is installed.
+
+`smoke_recovery.py` creates a disposable fixture profile, inserts an unactivated
+stage into real Chroma, calls the HTTP recovery endpoint, checks exact active-ID
+preservation and retrieval, then purges the fixture. This passed, as did mocked
+low-space/missing-volume checks and cleanup authorization tests. Actual disk
+exhaustion and forced process death were not simulated. Orphans from a first
+index with no committed profile state remain a separate recovery task.
 
 ## Consistent local backup and restore drill
 
