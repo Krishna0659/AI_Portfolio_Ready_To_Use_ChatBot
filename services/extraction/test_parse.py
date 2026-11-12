@@ -20,6 +20,12 @@ class ParserTests(unittest.TestCase):
         with self.assertRaises(ValueError):module.extract(b'not a pdf','pdf')
     def test_oversize(self):
         with self.assertRaises(ValueError):module.extract(b'x'*10485761,'txt')
+    def test_embedded_macro_rejection(self):
+        with self.assertRaises(ValueError):module.extract(self.archive('word/vbaProject.bin','sub test()'),'docx')
+    def test_embedded_executable_folder_rejection(self):
+        with self.assertRaises(ValueError):module.extract(self.archive('word/embeddings/payload.exe','binary'),'docx')
+    def test_absolute_path_traversal(self):
+        with self.assertRaises(ValueError):module.extract(self.archive('/etc/passwd','root:x:0:0'),'docx')
     def test_network_block(self):
         with self.assertRaises(RuntimeError):module.socket.socket()
 if __name__=='__main__':unittest.main()
