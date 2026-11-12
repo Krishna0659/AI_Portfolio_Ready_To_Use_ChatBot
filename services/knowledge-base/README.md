@@ -1,5 +1,11 @@
 # PortfolioAI Knowledge Base
 
+## Consistent local backup and restore drill
+
+Run `./services/knowledge-base/restore-drill.ps1` from the repository in PowerShell. It briefly stops only the two KB containers, copies both /data directories as one consistent backup, restarts originals in a finally block, and restores separate isolated containers using the original image IDs. It checks active-profile retrieval and stale replay rejection for existing purge markers. Restored test containers are stopped afterward; backup files and stopped containers remain for inspection. The fixture-scoped credential must authorize the test profiles.
+
+Verified drill: three active profiles and two purge markers survived restore; original API returned healthy afterward. Backup retained under ignored `.local/kb-backup-71ea0fc037db`. It contains resume-derived data and must remain private. This is a same-host test, not protection against loss of the host. Before production use, add encrypted off-host retention and replay deletions occurring after backup capture before opening restored access. No forced power-loss, cross-version restore or post-backup deletion recovery is claimed.
+
 Optional hybrid query: set `mode` to `hybrid` on /v1/query. Default remains `dense`. Hybrid combines dense and BM25 ranks using RRF k=60, up to 20 candidates from each ranking. Both read only the active snapshot and authorized tenant/profile. Lexical scoring scans at most MAX_FACTS records; large-profile latency still requires benchmarking. Distances remain dense distances, not fused scores, and may be null for lexical-only results.
 
 Hybrid evaluation on the unchanged eight-question development set: Recall@3=0.6667, MRR@3=0.6875, mean/max 22.53/48.04 ms. Thirteen tests pass. Because recall stayed unchanged and some ranks regressed, hybrid is optional. No model API or paid dependency was added.
