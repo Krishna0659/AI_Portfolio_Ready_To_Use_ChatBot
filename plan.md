@@ -149,3 +149,7 @@ Use the five website phases in the reference PRD as the execution order. Existin
 7. **Separate ChromaDB project — locally hardened, production acceptance open:** Verified snapshot lifecycle, scoped hot-reloaded caller grants, request/container/tenant limits, killable embedding subprocess, disk headroom admission, first-stage recovery, actual API SIGKILL recovery and post-backup deletion replay. Encrypted local backup is prepared; no off-host copy exists. Remaining release gates: host-enforced persistent disk quotas and exhaustion testing; off-host backup/key custody and host-loss restore with current deletion ledger; clean locked build after Docker DNS is repaired, dependency security review and capacity testing; retrieval improvements and independent evaluation (dense Recall@3/MRR@3=0.6667, hybrid Recall@3=0.6667/MRR@3=0.6875). Website integration and hosting remain isolated. See `services/knowledge-base/README.md` for current evidence and limits.
 
 Maintain this file with every completed work batch: add verified results to section 1, update remaining work in section 2, record the date and relevant checks/commits, and preserve explicit limitations. Do not mark untested work, mocks, configuration alone or partial features as fully complete. Keep meaningful commits and pushes; never inflate the count with empty commits. Read-only reference files under `sources/` remain unchanged.
+
+## 6. Hosting (paused)
+
+- [ ] Configure production deployment (paused per user request)
