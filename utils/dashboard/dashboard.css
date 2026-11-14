@@ -61,6 +61,8 @@
 .dashboard .tabs button{border-radius:0}
 .dashboard .tabs .selected{border-bottom-color:var(--accent)}
 .dashboard .settings-grid{gap:24px}
+.dashboard .passkey-section{display:grid;gap:12px}
+.dashboard .passkey-section .version-actions{margin-top:14px}
 .dashboard .advanced-settings{grid-column:1/-1;padding:22px}
 .dashboard .advanced-settings>summary{cursor:pointer;font-weight:500;line-height:1.5}
 .dashboard .advanced-settings .section-heading{padding:20px 0 12px}

@@ -4,6 +4,14 @@ Last updated: 12 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Passkey (WebAuthn) Frontend Integration & Dedicated Settings Route:
+  - Added dedicated Next.js `/settings` route (`app/settings/page.tsx`) rendering the workspace Settings tab with full metadata.
+  - Enhanced `Dashboard` in `app/workspace.tsx` with `initialTab` support and clean browser URL synchronization (`window.history.replaceState`) on sidebar navigation.
+  - Elevated `PasskeyControls` (`utils/auth/PasskeyControls.tsx`) into a dedicated Passkey & Identity card in the Settings grid, styled with the native dashboard theme tokens, button actions (`Verify with Google`, `Add a passkey`, `Verify with passkey`), and accessible status/error messages.
+  - Refactored `AccountDeletion` in `app/account-deletion.tsx` to export `AccountDeletionBody`, seamlessly integrating account deletion into the Privacy & Retention section while pointing to the dedicated Passkey panel.
+  - Accessibility & performance refinements: added `aria-labelledby`, `aria-busy` during WebAuthn ceremonies, polite live-regions (`role="status"`, `aria-live="polite"`), assertive alert announcements (`role="alert"`, `aria-live="assertive"`), keyboard tab-index disabling for action links, and static route prerendering (`○ /settings`).
+  - Verification: 101/101 automated Node.js unit tests passing, clean TypeScript check (`tsc --noEmit`), and successful Next.js production build (`npm run build`) generating `/settings`. Hosting remains paused.
+
 - [x] Knowledge Base Execution Deadlines, Credential Provisioning & Offline Build Pinning:
   - Execution boundaries: Added `execution.py` with context-local request budgets (60s response deadline), bounded lock acquisition and a separate killable embedding subprocess (45s budget, including startup). Chroma inactivity timeouts clamp to remaining budget. Response timeout does not cancel arbitrary filesystem/network work; uncertain writes require status/exact replay.
   - Credential provisioning & dynamic revocation: `credentials.py` provisions scoped keys into exclusive private files and revokes SHA-256 grants without restarting the API. Invalid on-disk configuration fails closed. Readiness-key rotation still requires environment replacement.
