@@ -3,6 +3,9 @@ node_modules
 .git
 .env*
 .local
+deploy/*.env
+.vercel
+services/rag/fixtures/resume-qa-v1.json
 docs/screenshots
 *.pem
 *.key

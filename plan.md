@@ -4,6 +4,14 @@ Last updated: 27 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Cloud application hosting completed (27 November): public Vercel routing to Azure HTTPS Next.js, private PostgreSQL/Chroma/knowledge service and autonomous worker, persistent volumes and server-only credentials. Ten live cloud checks passed, 101 website tests passed, TypeScript clean, Next.js 16.4.6 npm audit clean; user confirmed Google login. Consistent encrypted backups run nightly, upload via managed identity to private Blob Storage with seven-day retention, and pass read-back checksums. Isolated database restore passed. Details and operational limits: docs/CLOUD_HOSTING.md.
+
+- [x] Azure infrastructure live (27 November): user approved conversion of the USD 50 alert target to INR. Saved and GET-verified INR 4650 monthly with enabled 50/80/100% email alerts (approximate conversion using SBI 26 November USD selling rate 92.95, rounded). Malaysia West Standard_B2as_v2 VM portfolioai-backend is Succeeded/running, public IP 20.17.104.134, 64 GiB Standard SSD, no custom inbound rules. Base estimate USD 74.52/month; charges now accrue. Four setup tests pass. Vercel framework configured to Next.js; user reports Google callback registered. Application services are not deployed yet.
+
+- [x] Vercel connected (27 November): CLI authorization verified; created and linked portfolioai under gaur54827-1114s-projects. Vercel domains API confirms portfolioai-mu.vercel.app is assigned and verified. OAuth callback is https://portfolioai-mu.vercel.app/api/auth/callback. No production deployment yet. Azure setup stopped before VM creation when the budget API returned INR; existing amount 50 means INR 50, superseding the earlier portal-dollar assumption.
+
+- [x] Azure access and regional pricing checked (27 November): local CLI login works. Subscription policy permits Malaysia West, UAE North, Indonesia Central, East Asia and Poland Central; Central India is blocked. Failed pilot group contains no resources. Microsoft retail API quotes Linux Standard_B2as_v2 at USD 0.0855/hour in Malaysia West/Indonesia Central, 0.0903 in UAE North, 0.105 in East Asia and 0.0864 in Poland Central. Even the cheapest compute alone is USD 62.415 per 730 hours, above the approved total range. No billable resources created during this check.
+
 - [x] Azure currency fallback (27 November): Cloud Shell saved the monthly 50 budget and all three alerts, but returned an empty currency and stopped before VM creation. User reports the portal displays dollars. Added explicit --portal-confirmed-usd fallback for missing currency only; conflicting currencies, wrong amounts and wrong periods still fail. Five local tests pass; live provisioning remains pending.
 
 - [x] Azure pilot preparation (27 November): user explicitly approved the roughly USD 45–50/month Central India B2as_v2 pilot and USD 50 monthly email alerts. Prepared scripts/azure_pilot.py for authenticated Cloud Shell: budget verification before provisioning, 2 vCPU/8 GiB Linux VM, 64 GiB Standard SSD, no zone, no custom inbound access, ownership/rerun checks and failure stops. Four local setup tests passed. No Azure resources were created from this workspace; awaiting the user-run Cloud Shell result.
@@ -187,6 +195,14 @@ Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [imp
 
 ## 2. Plan to execute
 
+**Current handoff:** Existing dashboard hosting is complete. Earlier hosting-paused, currency and local-only entries below are historical. Next feature work is the public embeddable widget/endpoint/domain controls/rate limits/publish switch; broader sustained-load and full host-loss drills remain operational follow-ups, not claimed as performed.
+
+**Active cloud deployment:** Azure VM is running and budget conversion is complete; earlier currency/region blockers below are historical. Next install backend/PostgreSQL/Chroma/worker with durable storage, configure HTTPS and secrets, adapt production website boundaries, deploy Vercel and verify real login/upload/approval/chat. Never claim infrastructure completion means application readiness. Keep Chroma and database ports private.
+
+**Current cloud handoff:** Await approval to convert the intended USD 50 alert budget to INR; VM remains uncreated. Vercel project exists but needs Next.js framework configuration, production backend/storage adaptation, secrets and deployment verification. User must register the confirmed callback. Never treat the assigned domain as a working deployment.
+
+**Azure cost decision:** The approved VM exceeds the USD 45–50/month range in all allowed regions before disk/IP costs. Obtain the user's revised cost or capacity decision before provisioning. Do not rerun the Central India script unchanged. Confirm destination quota, SKU restrictions and full price before any deployment.
+
 **Azure currency follow-up:** Rerun the corrected pinned setup with explicit portal USD confirmation, then inspect the Cloud Shell provisioning summary. API currency is still unavailable; the fallback records operator confirmation rather than claiming independent API verification.
 
 **Current Azure handoff:** User authorization now covers the specified pilot infrastructure and budget, superseding the older hosting pause for that scope. Await Cloud Shell provisioning summary; inspect failures before changing VM size or retrying. Budget currency/availability must verify before VM creation. Backend installation, HTTPS, Vercel adaptation, dependency security update and public widget remain outstanding. Cloud credentials are not available locally; no deployed callback URL exists yet.
@@ -250,6 +266,6 @@ Use the five website phases in the reference PRD as the execution order. Existin
 
 Maintain this file with every completed work batch: add verified results to section 1, update remaining work in section 2, record the date and relevant checks/commits, and preserve explicit limitations. Do not mark untested work, mocks, configuration alone or partial features as fully complete. Keep meaningful commits and pushes; never inflate the count with empty commits. Read-only reference files under `sources/` remain unchanged.
 
-## 6. Hosting (paused)
+## 6. Hosting
 
-- [ ] Configure production deployment (paused per user request)
+- [x] Existing authenticated website hosted on Vercel/Azure; see docs/CLOUD_HOSTING.md and docs/CLOUD_HOSTING_VERIFICATION.json. Public widget remains separate.

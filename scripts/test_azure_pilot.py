@@ -7,26 +7,19 @@ import azure_pilot as pilot
 class AzurePilotTests(unittest.TestCase):
     def test_budget_dates_and_thresholds(self):
         props = pilot.budget_body('test@example.com', date(2026, 12, 31))['properties']
-        self.assertEqual(props['amount'], 50)
+        self.assertEqual(props['amount'], 4650)
         self.assertEqual(props['timePeriod']['startDate'], '2026-12-01T00:00:00Z')
         self.assertEqual(props['timePeriod']['endDate'], '2027-12-01T00:00:00Z')
         self.assertEqual([n['threshold'] for n in props['notifications'].values()], [50, 80, 100])
 
-    def test_unknown_or_wrong_currency_cannot_create_vm(self):
-        for currency in (None, '', 'INR'):
+    def test_currency_amount_and_period_must_match(self):
+        pilot.verify_budget({'properties': {'amount': 4650, 'timeGrain': 'Monthly',
+            'currentSpend': {'unit': 'INR'}}})
+        for currency, amount, period in [(None, 4650, 'Monthly'), ('', 4650, 'Monthly'),
+                ('USD', 4650, 'Monthly'), ('INR', 50, 'Monthly'), ('INR', 4650, 'Annually')]:
             with self.assertRaises(RuntimeError):
-                pilot.verify_budget({'properties': {'amount': 50, 'timeGrain': 'Monthly',
+                pilot.verify_budget({'properties': {'amount': amount, 'timeGrain': period,
                     'currentSpend': {'unit': currency}}})
-
-    def test_portal_confirmation_only_fills_missing_currency(self):
-        for currency in (None, '', 'USD'):
-            pilot.verify_budget({'properties': {'amount': 50, 'timeGrain': 'Monthly',
-                'currentSpend': {'unit': currency}}}, portal_confirmed_usd=True)
-        for currency, amount, grain in [('INR', 50, 'Monthly'), ('', 500, 'Monthly'),
-                                        ('', 50, 'Annually')]:
-            with self.assertRaises(RuntimeError):
-                pilot.verify_budget({'properties': {'amount': amount, 'timeGrain': grain,
-                    'currentSpend': {'unit': currency}}}, portal_confirmed_usd=True)
 
     def test_budget_failure_stops_before_resource_creation(self):
         with patch.object(pilot, 'az', side_effect=[{'id': 'test', 'state': 'Enabled'}, RuntimeError('budget denied')]) as call:

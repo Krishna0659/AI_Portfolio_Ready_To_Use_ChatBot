@@ -1,0 +1,1 @@
+{"rules":[{"enabled":true,"name":"delete-backups-after-seven-days","type":"Lifecycle","definition":{"filters":{"blobTypes":["blockBlob"],"prefixMatch":["snapshots/"]},"actions":{"baseBlob":{"delete":{"daysAfterModificationGreaterThan":7}}}}}]}

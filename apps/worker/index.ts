@@ -1,4 +1,5 @@
 import {readFile} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import {workerPool as pool} from '../../packages/db/index';
 import {fetchPublic,githubReadme,crawlPages} from '../../services/fetch-broker/fetch';
 import {ownerAppEnabled,ownerReadme,ownerDocs} from '../../services/github/app';
@@ -6,7 +7,7 @@ import {cleanupOne,objectPath} from '../../packages/domain/lifecycle';
 import {claimJob,heartbeat,completeJob,failJob} from '../../packages/domain/jobs';
 import {parse} from '../../services/extraction';
 import {deliverKnowledge} from '../../packages/domain/rag';
-process.loadEnvFile('.env.local');
+if(existsSync('.env.local'))process.loadEnvFile('.env.local');
 if(!process.env.WORKER_DATABASE_URL)throw Error('WORKER_DATABASE_URL is required for the worker');
 let stopped=false;process.on('SIGINT',()=>stopped=true);process.on('SIGTERM',()=>stopped=true);
 // One job per tenant per pass; separate identity/worker database roles remain a release gate.

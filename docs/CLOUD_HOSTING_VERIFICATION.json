@@ -1,0 +1,36 @@
+{
+  "origin": "https://portfolioai-mu.vercel.app",
+  "verifiedAt": "2026-11-26T20:40:43.800Z",
+  "checks": [
+    "Public HTTPS website and database readiness",
+    "Google authorization redirect, canonical callback and secure login cookie",
+    "Authentication, CSRF, tenant-input rejection and unpublished guard",
+    "Persistent upload and autonomous background extraction",
+    "Approval automatically indexed into persistent Chroma",
+    "Live Gemini answer with citations through Vercel and Azure",
+    "Missing information produces the knowledge-base fallback",
+    "Separate account cannot access published profile",
+    "Source deletion immediately invalidates chat",
+    "Disposable account cleanup and durable erasure completed"
+  ],
+  "googleInteractiveLogin": "User confirmed Google login opens dashboard on 27 November 2026",
+  "websiteRegressionTests": {
+    "passed": 101,
+    "failed": 0
+  },
+  "productionDependencyAudit": "0 known npm vulnerabilities",
+  "backupRestore": {
+    "restoredPublicTables": 22,
+    "archiveChecksum": "d1564bab727377a923a3c07768d37c2fe333ef94c18f889bf82a91286dc7cb3a",
+    "offVmUploadReadback": "verified",
+    "retentionDays": 7,
+    "timer": "21:30 UTC daily"
+  },
+  "deployment": {
+    "vercel": "READY",
+    "region": "malaysiawest",
+    "vm": "Standard_B2as_v2",
+    "website": "https://portfolioai-mu.vercel.app",
+    "architecture": "Vercel HTTPS reverse proxy to Azure application"
+  }
+}

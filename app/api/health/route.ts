@@ -15,7 +15,7 @@ export async function GET(){
    headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
   });
  }catch(e){
-  return NextResponse.json({ok:false,db:'error',error:(e as Error).message??'db unreachable'},{
+  return NextResponse.json({ok:false,db:'error',error:'Database unavailable'},{
    status:503,
    headers:{'Cache-Control':'no-store','Retry-After':'5','X-Robots-Tag':'noindex'}
   });

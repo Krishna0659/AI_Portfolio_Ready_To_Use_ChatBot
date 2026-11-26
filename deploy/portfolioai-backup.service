@@ -1,0 +1,7 @@
+[Unit]
+Description=PortfolioAI consistent encrypted backup
+Requires=docker.service
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/portfolioai/deploy/backup.sh
