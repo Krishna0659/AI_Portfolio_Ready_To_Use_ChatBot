@@ -37,6 +37,10 @@ def _embed_worker(requests, responses, model_path):
     while True:
         texts, options = requests.get()
         try:
+            lengths=model.tokenizer(texts,add_special_tokens=True,truncation=False,verbose=False)['input_ids']
+            if any(len(tokens)>model.max_seq_length for tokens in lengths):
+                responses.put(('too_long',None))
+                continue
             responses.put(('ok', model.encode(texts, **options).tolist()))
         except Exception:
             responses.put(('error', None))
@@ -79,6 +83,8 @@ class EmbeddingWorker:
             try:
                 self.requests.put((texts, options), timeout=max(0, timeout - (time.monotonic() - start)))
                 status, vectors = self.responses.get(timeout=max(0, timeout - (time.monotonic() - start)))
+                if status=='too_long':
+                    raise HTTPException(422,'input exceeds model token limit')
                 if status != 'ok':
                     raise HTTPException(503, 'embedding worker unavailable')
                 return Vectors(vectors)

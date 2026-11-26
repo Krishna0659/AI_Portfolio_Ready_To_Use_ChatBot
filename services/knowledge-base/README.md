@@ -105,3 +105,52 @@ Release remains blocked on:
 4. Retrieval quality improvements and an independently reviewed evaluation set.
 
 Website integration and hosting remain paused. No production-complete claim is made.
+## RAG chunk ingestion contract (15 November 2026)
+
+`POST /v1/index` additionally accepts `rag-chunks-v1` whole-profile snapshots;
+`approved-profile-v1` remains compatible, including existing snapshot digests.
+The new contract validates chunk metadata/scope/hashes and retains all preparation
+provenance in Chroma. It reuses the same authorization, embedding, quotas, staging,
+activation, status, purge and cleanup logic. Grants still require `index` and
+`status`; no new privileges are introduced. Full batches are limited to the existing
+1 MiB request cap and `KB_MAX_FACTS`. Do not send independent document batches to a
+profile-replacement endpoint. See [RAG integration](../rag/README.md#phase-2-batch-indexing).
+
+Code and isolated tests passed; the running service has not been updated. A disposable
+offline smoke verified real embeddings and persistent Chroma with HTTP RAG-to-KB
+calls, not the deployed KB-to-Chroma HTTP transport. Existing transport tests passed
+separately. Clean image/deployed integration verification remains outstanding.
+
+## RAG retrieval contract (15 November 2026)
+
+`POST /v1/query` also supports `mode: lexical`, using the existing BM25 ranker
+without embedding/vector calls. Hybrid continues using RRF k=60. Legacy callers
+retain dense defaults. Requests specifying `contract_version: rag-chunks-v1` must
+also supply generation, profile_version, snapshot, embedding_model and
+preprocessing_version; partial scope is rejected. These fields must match active
+state under the query lock, including the operator-configured model. Missing or
+purged profiles return 404, mismatches 409. Scoped responses include the verified
+scope, model versions, ranking mode/RRF constant and candidate counts. No caller
+authorization rules are relaxed. Independent synthetic evaluation and limitations
+are documented in the RAG README and `docs/RAG_RETRIEVAL_BASELINE.json`.
+
+### Active parent retrieval v3
+
+RAG clients now request `preprocessing_version: parent-retrieval-v3` with
+`rag-prep-v2` / `section-parents-4000-v2` parents. Indexing stores token-bounded,
+overlapping child vectors and the source parent context in the same atomic
+snapshot. Physical child counts drive quotas; `parent_count` identifies the
+logical input count. Queries require complete scope, fuse child candidates,
+apply the pinned local cross-encoder, then return unique parents with original
+hashes and citation IDs. Legacy snapshots require explicit re-preparation and
+a newer generation; no automatic migration is performed.
+
+V3 supplies the profile subject to both embeddings and reranking; the internal
+subject field is stripped from returned citation metadata. DOCX preparation uses
+`rag-extract-v2` to recognize short uppercase section labels beyond a fixed list.
+
+The production Dockerfile includes pinned reranker weights. For the offline
+runtime, mount the cached model and set `KB_RERANKER_PATH` to its snapshot path.
+Missing or mismatched weights fail closed. `retrieval_policy.json` records the
+calibrated policy and expected weights hash. See `docs/RAG_FINAL_CONFIGURATION.md`
+for the configuration, evidence and integration steps.

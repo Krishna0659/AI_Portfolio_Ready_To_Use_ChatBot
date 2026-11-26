@@ -1,0 +1,32 @@
+{
+  "version": "synthetic-retrieval-v1",
+  "data_classification": "synthetic",
+  "documents": [
+    {"id":"payments","section":"Projects","text":"Mira built LedgerFox, an escrow payment service using PostgreSQL transactions and idempotency keys to prevent duplicate transfers."},
+    {"id":"search","section":"Projects","text":"Mira developed AtlasFind, a semantic document search application using Python, sentence embeddings and a vector database."},
+    {"id":"vision","section":"Research","text":"Mira trained a convolutional neural network to classify plant disease from leaf photographs. The held-out image dataset achieved 92 percent accuracy."},
+    {"id":"research","section":"Research","text":"During a robotics lab internship, Mira optimized path planning and reduced simulated robot navigation time by 18 percent."},
+    {"id":"education","section":"Education","text":"Mira completed a Bachelor of Computer Science at Cedar University in 2024, with a GPA of 3.7 out of 4."},
+    {"id":"leadership","section":"Leadership","text":"Mira led a student developer club of 30 members and organized six peer programming workshops."},
+    {"id":"infra","section":"Skills","text":"Mira uses Docker, Redis, PostgreSQL and GitHub Actions for backend deployment, caching and continuous integration."},
+    {"id":"frontend","section":"Projects","text":"Mira built an accessible event calendar in React and TypeScript, with keyboard navigation and screen reader labels."},
+    {"id":"award","section":"Achievements","text":"Mira earned second place in the regional GreenCode hackathon for an energy consumption dashboard."},
+    {"id":"writing","section":"Writing","text":"Mira published a tutorial explaining SQL joins, database indexes and query execution plans."},
+    {"id":"volunteer","section":"Volunteering","text":"Mira volunteered at a community library, teaching basic computer literacy to adult learners."},
+    {"id":"mobile","section":"Projects","text":"Mira prototyped a Flutter mobile weather application that caches forecasts for offline use."}
+  ],
+  "questions": [
+    {"id":"exact-project","query":"How does LedgerFox avoid duplicate transfers?","relevance":{"payments":3}},
+    {"id":"semantic-search","query":"Which application finds documents by their meaning?","relevance":{"search":3}},
+    {"id":"computer-vision","query":"What image recognition work has Mira done?","relevance":{"vision":3}},
+    {"id":"research-metric","query":"What measurable improvement came from the robotics internship?","relevance":{"research":3}},
+    {"id":"education-date","query":"Where and when did Mira graduate, and with what GPA?","relevance":{"education":3}},
+    {"id":"leadership-size","query":"How large was the developer club Mira led?","relevance":{"leadership":3}},
+    {"id":"infra-stack","query":"What tools does Mira use for backend deployment and caching?","relevance":{"infra":3}},
+    {"id":"accessibility","query":"Which project supports people who use screen readers?","relevance":{"frontend":3}},
+    {"id":"award-name","query":"What did Mira achieve at GreenCode?","relevance":{"award":3}},
+    {"id":"teaching","query":"What experience does Mira have teaching others?","relevance":{"volunteer":3,"leadership":2,"writing":1}},
+    {"id":"database-evidence","query":"What evidence shows Mira can work with relational databases?","relevance":{"payments":3,"writing":3,"infra":2}},
+    {"id":"offline-mobile","query":"Which mobile application works without an internet connection?","relevance":{"mobile":3}}
+  ]
+}

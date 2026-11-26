@@ -5,12 +5,13 @@ import {ownerAppEnabled,ownerReadme,ownerDocs} from '../../services/github/app';
 import {cleanupOne,objectPath} from '../../packages/domain/lifecycle';
 import {claimJob,heartbeat,completeJob,failJob} from '../../packages/domain/jobs';
 import {parse} from '../../services/extraction';
+import {deliverKnowledge} from '../../packages/domain/rag';
 process.loadEnvFile('.env.local');
 if(!process.env.WORKER_DATABASE_URL)throw Error('WORKER_DATABASE_URL is required for the worker');
 let stopped=false;process.on('SIGINT',()=>stopped=true);process.on('SIGTERM',()=>stopped=true);
 // One job per tenant per pass; separate identity/worker database roles remain a release gate.
 async function tick(){
- await cleanupOne();const tenants=await pool.query('SELECT worker_tenants() AS id');
+ await cleanupOne();await deliverKnowledge();await pool.query('SELECT worker_complete_erasures()');const tenants=await pool.query('SELECT worker_tenants() AS id');
  for(const {id:tenant} of tenants.rows){
   if(stopped)break;const authenticatedGithub=ownerAppEnabled(tenant),job=await claimJob(tenant,authenticatedGithub);
   if(job){let heartbeatPending:Promise<void>|null=null;

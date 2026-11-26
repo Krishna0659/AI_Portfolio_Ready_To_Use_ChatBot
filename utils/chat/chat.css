@@ -1,0 +1,9 @@
+.profile-chat { margin-top: 24px; min-width: 0; }
+.profile-chat > p, .profile-chat > form, .profile-chat > div[aria-live] { margin-left: 22px; margin-right: 22px; }
+.profile-chat form { display: grid; gap: 12px; }
+.profile-chat textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+.profile-chat button { justify-self: start; min-height: 44px; }
+.profile-answer { margin-top: 24px; overflow-wrap: anywhere; max-width: 72ch; }
+.profile-answer > p { white-space: pre-wrap; }
+.profile-answer h3 { font-size: 14px; margin-top: 20px; }
+.profile-chat .hint { margin-top: 20px; }

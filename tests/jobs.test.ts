@@ -26,7 +26,7 @@ test('job leases renew, recover and reject late success/failure after cancellati
   assert.equal(await completeJob(old,'Late result'),false);assert.equal(await failJob(old,Error('Late failure'),false),false);
   assert.equal(await completeJob({...current,tenant_id:randomUUID()},'Foreign result'),false);
   assert.equal(await failJob(current,Object.assign(Error('Temporary network loss'),{code:'ECONNRESET'}),false),true);
-  const queued=(await transaction(tenant,db=>db.query('SELECT status,available_at>now() delayed FROM jobs WHERE id=$1',[jobId]))).rows[0];assert.equal(queued.status,'queued');assert.equal(queued.delayed,true);
+  const queued=(await transaction(tenant,db=>db.query('SELECT status,available_at>now() delayed FROM jobs WHERE id=$1',[jobId]))).rows[0];assert.equal(queued.status,'retry_wait');assert.equal(queued.delayed,true);
   await transaction(tenant,db=>db.query('UPDATE jobs SET available_at=now() WHERE id=$1',[jobId]));const cancelled=(await claimJob(tenant,false))!;
   await transaction(tenant,db=>db.query("UPDATE jobs SET status='cancelled',lease=NULL WHERE id=$1",[jobId]));assert.equal(await heartbeat(cancelled),false);assert.equal(await completeJob(cancelled,'Cancelled result'),false);assert.equal(await failJob(cancelled,Error('Cancelled failure'),false),false);
   await transaction(tenant,db=>db.query("UPDATE jobs SET status='queued',available_at=now() WHERE id=$1",[jobId]));const valid=(await claimJob(tenant,false))!;assert.equal(await completeJob(valid,'Valid evidence'),true);assert.equal(await completeJob(valid,'Duplicate evidence'),false);

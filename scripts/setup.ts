@@ -38,4 +38,5 @@ if(process.env.WORKER_DATABASE_URL){
  await db.query('GRANT SELECT,UPDATE,DELETE ON deletion_requests,object_deletions TO portfolio_worker');
  await db.query(await readFile('packages/db/worker.sql','utf8'));
 }
+await db.query(await readFile('packages/db/rag.sql','utf8'));
 await db.query('COMMIT');await db.end();console.log('Schema and runtime roles ready');

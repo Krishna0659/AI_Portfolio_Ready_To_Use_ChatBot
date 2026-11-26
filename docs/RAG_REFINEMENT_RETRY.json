@@ -1,0 +1,17 @@
+{
+  "completed": false,
+  "stopped_reason": "Confirmed daily free-tier generation quota exhausted; remaining retries stopped",
+  "completed_attempt_outcomes": [
+    "provider_http_429",
+    "provider_http_429",
+    "provider_http_429",
+    "provider_http_429",
+    "provider_http_429",
+    "provider_http_429",
+    "provider_http_429"
+  ],
+  "quota_evidence": "RAG_QUOTA_DIAGNOSTIC.json",
+  "answer_quality_metrics": null,
+  "code_verification": "65 RAG tests passed; metadata cache expiry/deadline covered",
+  "precision_experiment": "Not activated: top-parent-only selection lacks multi-source safety"
+}

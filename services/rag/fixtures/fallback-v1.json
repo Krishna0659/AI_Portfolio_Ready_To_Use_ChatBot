@@ -1,0 +1,12 @@
+{
+  "version": "synthetic-fallback-v1",
+  "data_classification": "synthetic",
+  "held_out": false,
+  "cases": [
+    {"id":"semester-mismatch","question":"What is Mira's CGPA through the third semester?","documents":[],"extra_evidence":[{"id":"gpa","section":"Education","text":"Mira's CGPA is 8.41 through the fourth semester."}],"expected_status":"insufficient_evidence","required_documents":[]},
+    {"id":"semester-match","question":"What is Mira's CGPA through the fourth semester?","documents":[],"extra_evidence":[{"id":"gpa","section":"Education","text":"Mira's CGPA is 8.41 through the fourth semester."}],"expected_status":"answered","required_documents":["gpa"]},
+    {"id":"missing-salary","question":"What is Mira's current salary?","documents":["education","leadership"],"expected_status":"insufficient_evidence","required_documents":[]},
+    {"id":"roles-complete","question":"List Mira's leadership roles.","documents":[],"extra_evidence":[{"id":"club","section":"Leadership","text":"Mira is Robotics Club Head, October 2025 to present."},{"id":"placement","section":"Leadership","text":"Mira is Placement Coordinator, August 2026 to present."}],"expected_status":"answered","required_documents":["club","placement"]},
+    {"id":"unsupported-premise","question":"Which Nobel Prize did Mira win?","documents":["education","leadership"],"expected_status":"insufficient_evidence","required_documents":[]}
+  ]
+}

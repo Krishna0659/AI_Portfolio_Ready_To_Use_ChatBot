@@ -21,9 +21,9 @@ def lexical(query, documents):
             scores[i] += idf * tf * 2.2 / (tf + 1.2 * (0.25 + 0.75 * lengths[i] / average))
     return sorted((i for i, score in enumerate(scores) if score > 0), key=lambda i: (-scores[i], i))
 
-def fuse(dense_ids, lexical_ids):
+def fuse(dense_ids, lexical_ids, k=60, dense_weight=.5):
     scores = {}
-    for ranking in (dense_ids, lexical_ids):
+    for ranking,weight in ((dense_ids,dense_weight),(lexical_ids,1-dense_weight)):
         for rank, record_id in enumerate(dict.fromkeys(ranking), 1):
-            scores[record_id] = scores.get(record_id, 0) + 1 / (60 + rank)
+            scores[record_id] = scores.get(record_id, 0) + weight / (k + rank)
     return sorted(scores, key=lambda record_id: (-scores[record_id], record_id))

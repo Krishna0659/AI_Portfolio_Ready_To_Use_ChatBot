@@ -1,0 +1,24 @@
+{
+  "release_ready": false,
+  "failed_gates": [
+    "live_generation",
+    "live_langsmith",
+    "isolated_extraction",
+    "clean_build",
+    "persistent_http_chroma",
+    "load_and_timeout_drill",
+    "rollback_drill",
+    "security_review",
+    "backup_restore",
+    "held_out_retrieval_dataset",
+    "held_out_live_answer_evaluation",
+    "invalid_answer_cases",
+    "answer_accuracy",
+    "citation_correctness",
+    "unsupported_claim_rate",
+    "abstention_accuracy",
+    "p95_latency_ms"
+  ],
+  "hosting_authorized": false,
+  "note": "Evidence review does not authorize deployment."
+}

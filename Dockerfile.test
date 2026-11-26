@@ -9,4 +9,4 @@ COPY --chown=node:node . .
 RUN mkdir -p .local/objects && chown node:node /app /app/.local /app/.local/objects
 USER node
 ENV NEXT_TELEMETRY_DISABLED=1
-CMD ["sh", "-c", "npm run db:setup && npm test && npm run check && /opt/parser/bin/python services/extraction/test_parse.py && npm run build && node scripts/check-built-server.mjs"]
+CMD ["sh", "-c", "npm run db:setup && npm test && npm run check && /opt/parser/bin/python services/extraction/test_parse.py && /opt/parser/bin/python -m unittest discover -s services/rag -p 'test_*.py' && npm run build && node scripts/check-built-server.mjs"]

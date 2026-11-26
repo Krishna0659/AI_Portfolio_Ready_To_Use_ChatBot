@@ -1,0 +1,11 @@
+{
+  "checked_on": "2026-11-22",
+  "endpoint_host": "generativelanguage.googleapis.com",
+  "models_from_official_discovery": true,
+  "probes": [
+    {"model":"gemini-2.5-flash","metadata":"passed","countTokens":"HTTP 404","generateContent":"not attempted after prerequisite failure"},
+    {"model":"gemini-3.5-flash","metadata":"passed","countTokens":"passed","generateContent":"timeout at 35-second probe deadline"},
+    {"model":"gemini-3.1-flash-lite","metadata":"passed","countTokens":"passed","generateContent":"HTTP 503"}
+  ],
+  "decision": "No alternative passed all three prerequisites; configured model unchanged. Single probe failures do not establish permanent model unavailability."
+}

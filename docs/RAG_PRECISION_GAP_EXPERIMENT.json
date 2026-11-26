@@ -1,0 +1,268 @@
+{
+  "experiment": "Parent-level score gap on cached real cross-encoder scores; no runtime change",
+  "selection": {
+    "gap": 0.0,
+    "recall": 1.0,
+    "precision": 1.0,
+    "negative_rejection": 0.4
+  },
+  "validation": {
+    "recall": 1.0,
+    "precision": 1.0,
+    "negative_rejection": 0.8
+  },
+  "baseline_validation": {
+    "recall": 1.0,
+    "precision": 0.6866666666666666,
+    "negative_rejection": 0.8
+  },
+  "trials": [
+    {
+      "gap": 0.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 0.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 1.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 2.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 2.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 3.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 3.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 4.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 4.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 5.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 5.5,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 6.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 6.5,
+      "recall": 1.0,
+      "precision": 0.95,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 7.0,
+      "recall": 1.0,
+      "precision": 0.95,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 7.5,
+      "recall": 1.0,
+      "precision": 0.95,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 8.0,
+      "recall": 1.0,
+      "precision": 0.95,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 8.5,
+      "recall": 1.0,
+      "precision": 0.8833333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 9.0,
+      "recall": 1.0,
+      "precision": 0.8833333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 9.5,
+      "recall": 1.0,
+      "precision": 0.8833333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 10.0,
+      "recall": 1.0,
+      "precision": 0.8833333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 10.5,
+      "recall": 1.0,
+      "precision": 0.8833333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 11.0,
+      "recall": 1.0,
+      "precision": 0.8166666666666667,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 11.5,
+      "recall": 1.0,
+      "precision": 0.8166666666666667,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 12.0,
+      "recall": 1.0,
+      "precision": 0.8083333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 12.5,
+      "recall": 1.0,
+      "precision": 0.7583333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 13.0,
+      "recall": 1.0,
+      "precision": 0.7533333333333333,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 13.5,
+      "recall": 1.0,
+      "precision": 0.7,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 14.0,
+      "recall": 1.0,
+      "precision": 0.7,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 14.5,
+      "recall": 1.0,
+      "precision": 0.6916666666666667,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 15.0,
+      "recall": 1.0,
+      "precision": 0.6916666666666667,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 15.5,
+      "recall": 1.0,
+      "precision": 0.6866666666666666,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 16.0,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 16.5,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 17.0,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 17.5,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 18.0,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 18.5,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 19.0,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 19.5,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    },
+    {
+      "gap": 20.0,
+      "recall": 1.0,
+      "precision": 0.67,
+      "negative_rejection": 0.4
+    }
+  ],
+  "limitation": "Previously used small general corpus; not fresh independent acceptance. Must also preserve multi-source recall on new documents before activation."
+}

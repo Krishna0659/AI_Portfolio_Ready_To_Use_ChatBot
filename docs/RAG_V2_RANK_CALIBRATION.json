@@ -1,0 +1,500 @@
+{
+  "threshold": -7.399620056152344,
+  "selected": {
+    "dense_weight": 0.75,
+    "rrf_k": 60,
+    "reranker_weight": 0.25,
+    "recall": 0.9722222222222222,
+    "mrr": 1.0,
+    "precision": 0.41666666666666663
+  },
+  "trials": [
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 10,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 0.9583333333333334,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 10,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 10,
+      "reranker_weight": 0.5,
+      "recall": 0.9166666666666666,
+      "mrr": 1.0,
+      "precision": 0.3611111111111111
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 10,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 10,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 30,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 0.9583333333333334,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 30,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 30,
+      "reranker_weight": 0.5,
+      "recall": 0.9166666666666666,
+      "mrr": 1.0,
+      "precision": 0.3611111111111111
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 30,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 30,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 60,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 60,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 60,
+      "reranker_weight": 0.5,
+      "recall": 0.9166666666666666,
+      "mrr": 1.0,
+      "precision": 0.3611111111111111
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 60,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.25,
+      "rrf_k": 60,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 10,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 10,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 10,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 10,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 10,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 30,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 30,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 30,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 30,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 30,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 60,
+      "reranker_weight": 0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 60,
+      "reranker_weight": 0.25,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 60,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 60,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.5,
+      "rrf_k": 60,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 10,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 10,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 10,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 10,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 10,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 30,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 30,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 30,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 30,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 30,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 60,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 60,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 60,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 60,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 0.75,
+      "rrf_k": 60,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 10,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 10,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 10,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 10,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 10,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 30,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 30,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 30,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 30,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 30,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 60,
+      "reranker_weight": 0,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 60,
+      "reranker_weight": 0.25,
+      "recall": 0.9722222222222222,
+      "mrr": 1.0,
+      "precision": 0.41666666666666663
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 60,
+      "reranker_weight": 0.5,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 60,
+      "reranker_weight": 0.75,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    },
+    {
+      "dense_weight": 1.0,
+      "rrf_k": 60,
+      "reranker_weight": 1.0,
+      "recall": 0.9444444444444444,
+      "mrr": 1.0,
+      "precision": 0.38888888888888884
+    }
+  ],
+  "calibration_sets": [
+    "general-calibration-v1 calibration half",
+    "synthetic-retrieval-v1"
+  ],
+  "held_out": false,
+  "objective": "preserve labelled positive pairs; maximize macro recall then MRR; numerical ties use balanced rank fusion",
+  "limitation": "Existing development fixtures, not independent validation. Abstention still requires generation."
+}

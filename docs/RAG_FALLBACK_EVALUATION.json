@@ -1,0 +1,65 @@
+{
+  "dataset_version": "synthetic-fallback-v1",
+  "dataset_sha256": "2116726f8a414ca9162a130e99a908c393da4c7a850ca03fa32014a22aa06f4b",
+  "model": "gemini-3-flash-preview",
+  "prompt_version": "grounded-excerpts-v2",
+  "real_provider": true,
+  "held_out": false,
+  "retrieval_source": "gold_synthetic_fixture",
+  "completed": true,
+  "planned_cases": 5,
+  "cases": [
+    {
+      "case_id": "semester-mismatch",
+      "expected_status": "insufficient_evidence",
+      "status": "insufficient_evidence",
+      "correct_status": true,
+      "correct_citations": true,
+      "supported": true,
+      "latency_ms": 2453.058000013698
+    },
+    {
+      "case_id": "semester-match",
+      "expected_status": "answered",
+      "status": "answered",
+      "correct_status": true,
+      "correct_citations": true,
+      "supported": true,
+      "latency_ms": 2389.730299997609
+    },
+    {
+      "case_id": "missing-salary",
+      "expected_status": "insufficient_evidence",
+      "status": "insufficient_evidence",
+      "correct_status": true,
+      "correct_citations": true,
+      "supported": true,
+      "latency_ms": 2320.7514999667183
+    },
+    {
+      "case_id": "roles-complete",
+      "expected_status": "answered",
+      "status": "answered",
+      "correct_status": true,
+      "correct_citations": true,
+      "supported": true,
+      "latency_ms": 3289.5933999679983
+    },
+    {
+      "case_id": "unsupported-premise",
+      "expected_status": "insufficient_evidence",
+      "status": "insufficient_evidence",
+      "correct_status": true,
+      "correct_citations": true,
+      "supported": true,
+      "latency_ms": 2403.2899999874644
+    }
+  ],
+  "metrics": {
+    "answer_accuracy": 1.0,
+    "citation_correctness": 1.0,
+    "unsupported_claim_rate": 0.0,
+    "abstention_accuracy": 1.0,
+    "p95_latency_ms": 3289.5933999679983
+  }
+}

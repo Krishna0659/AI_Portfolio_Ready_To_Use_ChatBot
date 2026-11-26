@@ -7,6 +7,17 @@ from fastapi.testclient import TestClient
 app = test_app.app
 
 class AuthorizationTests(unittest.TestCase):
+    def test_explicit_website_grant_spans_tenants_but_not_profiles_or_operations(self):
+        grant = {hashlib.sha256(b'website').hexdigest(): {'profiles': {'*': ['approved-profile']}, 'operations': ['query']}}
+        with patch.object(app, 'GRANTS', grant), patch.object(app, 'load_state', return_value={}):
+            client = TestClient(app.app)
+            headers = {'x-kb-api-key': 'website'}
+            for tenant in ['first-workspace', 'new-workspace']:
+                body = {'tenant_id': tenant, 'profile_id': 'approved-profile', 'query': 'skills'}
+                self.assertEqual(client.post('/v1/query', json=body, headers=headers).status_code, 200)
+                self.assertEqual(client.post('/v1/query', json={**body, 'profile_id': 'other'}, headers=headers).status_code, 403)
+                self.assertEqual(client.post('/v1/purge', json={**body, 'generation': 1}, headers=headers).status_code, 403)
+
     def test_transport_failure_returns_retryable_503_without_details(self):
         grant = {hashlib.sha256(b'reader').hexdigest(): {'profiles': {'t': ['p']}, 'operations': ['query']}}
         with patch.object(app, 'GRANTS', grant), patch.object(app, 'load_state', return_value={'t:p': {'generation': 1, 'snapshot': 's'}}), patch.object(app, 'resources', side_effect=app.httpx.ReadTimeout('private-host-secret')):

@@ -1,0 +1,50 @@
+{
+  "assessed_on": "2026-11-15",
+  "gates": {
+    "live_langsmith": {
+      "evidence": "No LangSmith key configured; exporter tested using isolated transports.",
+      "passed": false
+    },
+    "isolated_extraction": {
+      "evidence": "OS sandbox and resource exhaustion acceptance remain open.",
+      "passed": false
+    },
+    "rollback_drill": {
+      "evidence": "Kill switch tested locally; versioned runtime rollback not exercised.",
+      "passed": false
+    },
+    "backup_restore": {
+      "evidence": "Earlier same-host KB restore does not satisfy off-host host-loss acceptance.",
+      "passed": false
+    },
+    "load_and_timeout_drill": {
+      "evidence": "docs/RAG_LOAD_DRILL.json passes synthetic concurrency drill only.",
+      "passed": false
+    },
+    "security_review": {
+      "evidence": "Negative tests pass; full release security review remains open.",
+      "passed": false
+    },
+    "clean_build": {
+      "evidence": "Clean locked rebuild remains open.",
+      "passed": false
+    },
+    "persistent_http_chroma": {
+      "evidence": "Disposable embedded Chroma checks are not deployed HTTP transport acceptance.",
+      "passed": false
+    },
+    "unit_and_contract_tests": {
+      "evidence": "56 RAG tests, 40 KB contract tests and 10 parser tests passed; 2 SDK tests skipped by mocked discovery.",
+      "passed": true
+    },
+    "live_generation": {
+      "evidence": "docs/RAG_ANSWER_EVALUATION.json: first live synthetic case timed out.",
+      "passed": false
+    }
+  },
+  "retrieval_baseline": {
+    "dataset_sha256": "b5e9ebd1706f20a217dd9af6958fe1e91d521d786511c013dff82b367494b715",
+    "mrr_at_k": 1.0,
+    "recall_at_k": 0.9444444444444444
+  }
+}

@@ -16,7 +16,21 @@ def echo(requests, responses, model_path):
         responses.put(('ok', [[float(len(text))] for text in texts]))
 
 
+def oversized(requests,responses,model_path):
+    requests.get()
+    responses.put(('too_long',None))
+
+
 class ExecutionTests(unittest.TestCase):
+    def test_oversized_model_input_is_rejected_without_truncation(self):
+        worker=EmbeddingWorker('unused',timeout=5,target=oversized)
+        try:
+            with self.assertRaises(HTTPException) as failure:
+                worker.encode(['input'])
+            self.assertEqual(failure.exception.status_code,422)
+        finally:
+            worker.close()
+
     def test_worker_timeout_kills_then_recovers(self):
         worker = EmbeddingWorker('unused', timeout=0.5, target=stall)
         try:

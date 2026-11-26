@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "real_provider": false,
+  "requests": 131,
+  "overload_rejections": 128,
+  "peak_provider_concurrency": 2,
+  "recovered": true,
+  "elapsed_ms": 8.394200005568564,
+  "limitation": "Synthetic concurrency/failure drill, not provider or production capacity evidence."
+}

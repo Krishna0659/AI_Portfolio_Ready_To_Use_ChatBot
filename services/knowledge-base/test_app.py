@@ -44,6 +44,21 @@ class KnowledgeBaseTests(unittest.TestCase):
         self.assertEqual(col.query.call_args.kwargs['where'], col.get.call_args.kwargs['where'])
         self.assertEqual(col.get.call_args.kwargs['where'], {'$and': [{'tenant_id': 't'}, {'profile_id': 'p'}, {'snapshot': 'active'}]})
 
+    def test_lexical_leadership_matches_section_without_invented_query_terms(self):
+        from ranking import lexical
+        docs = [
+            'LEADERSHIP Operational Head Robogenesis AI Robotics Club',
+            'LEADERSHIP Placement Coordinator Placement Career Services Centre',
+            'PROJECTS Six microservices behind a React frontend',
+        ]
+        ranked = lexical("What are Krishna's past or ongoing leadership roles?", docs)
+        self.assertEqual(set(ranked[:2]), {0, 1})
+
+    def test_database_roles_do_not_expand_into_placement_titles(self):
+        from ranking import lexical
+        self.assertEqual(lexical('database roles', ['Database roles grant read access',
+            'Placement Coordinator Operational Head']), [0])
+
     def test_cleanup_keeps_active_and_scopes_every_page(self):
         col = MagicMock()
         col.get.side_effect = [

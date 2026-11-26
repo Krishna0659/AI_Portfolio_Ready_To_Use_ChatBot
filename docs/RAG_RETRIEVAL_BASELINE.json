@@ -1,0 +1,550 @@
+{
+  "dataset_version": "synthetic-retrieval-v1",
+  "dataset_sha256": "b5e9ebd1706f20a217dd9af6958fe1e91d521d786511c013dff82b367494b715",
+  "questions": 12,
+  "k": 3,
+  "rrf_k": 60,
+  "request_interval_seconds": 0.55,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "snapshot": "8457fccfd19a74e09ff1ceae057425b38ab4c8bcf2d6d5fc9169db0130c1282c",
+  "summary": {
+    "dense": {
+      "mrr_at_k": 1.0,
+      "recall_at_k": 0.9722222222222222,
+      "precision_at_k": 0.41666666666666663,
+      "ndcg_at_k": 0.992185099226615,
+      "duplicate_rate": 0.0,
+      "latency_p50_ms": 19.150968997564632,
+      "latency_p95_ms": 30.381249248603126,
+      "latency_p99_ms": 30.931374648789642
+    },
+    "lexical": {
+      "mrr_at_k": 0.8194444444444444,
+      "recall_at_k": 0.8611111111111112,
+      "precision_at_k": 0.3055555555555555,
+      "ndcg_at_k": 0.8230151906498046,
+      "duplicate_rate": 0.0,
+      "latency_p50_ms": 4.4311640012892894,
+      "latency_p95_ms": 8.482829800777836,
+      "latency_p99_ms": 9.039440358610591
+    },
+    "hybrid": {
+      "mrr_at_k": 1.0,
+      "recall_at_k": 0.9444444444444444,
+      "precision_at_k": 0.38888888888888884,
+      "ndcg_at_k": 0.9696041771649472,
+      "duplicate_rate": 0.0,
+      "latency_p50_ms": 21.845479495823383,
+      "latency_p95_ms": 41.6292957466794,
+      "latency_p99_ms": 53.63088314363269
+    }
+  },
+  "cases": {
+    "dense": [
+      {
+        "case_id": "exact-project",
+        "retrieved": [
+          "payments:3f98b085bf23cf3d2e50ada88f2bd91e",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 19.784124990110286
+      },
+      {
+        "case_id": "semantic-search",
+        "retrieved": [
+          "search:24b11d0fbf5a218998347f9fb6e550c9",
+          "writing:5dcf96b3b3007ae2812f750fba9f364c",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 16.03876099397894
+      },
+      {
+        "case_id": "computer-vision",
+        "retrieved": [
+          "vision:e64e395f9efbd7a5da378e2bd62501c6",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "award:b80d832eb87c9526f7ff9a80f812a510"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 18.722239998169243
+      },
+      {
+        "case_id": "research-metric",
+        "retrieved": [
+          "research:62bbda4d7fbc4c5618e231064001b599",
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "education:cd006615ac643c4ba33353a2ccabb6dc"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 16.173010008060373
+      },
+      {
+        "case_id": "education-date",
+        "retrieved": [
+          "education:cd006615ac643c4ba33353a2ccabb6dc",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "leadership:8f99d504d7331e379b25240778203a95"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 19.57969799696002
+      },
+      {
+        "case_id": "leadership-size",
+        "retrieved": [
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 13.94224600517191
+      },
+      {
+        "case_id": "infra-stack",
+        "retrieved": [
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "writing:5dcf96b3b3007ae2812f750fba9f364c"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 13.929208012996241
+      },
+      {
+        "case_id": "accessibility",
+        "retrieved": [
+          "frontend:23219149c337ac7af149d04798159257",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 15.457486006198451
+      },
+      {
+        "case_id": "award-name",
+        "retrieved": [
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 22.169215997564606
+      },
+      {
+        "case_id": "teaching",
+        "retrieved": [
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2"
+        ],
+        "mrr": 1.0,
+        "recall": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "ndcg": 0.9467676761267002,
+        "duplicate_rate": 0.0,
+        "latency_ms": 31.06890599883627
+      },
+      {
+        "case_id": "database-evidence",
+        "retrieved": [
+          "writing:5dcf96b3b3007ae2812f750fba9f364c",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "payments:3f98b085bf23cf3d2e50ada88f2bd91e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 1.0,
+        "ndcg": 0.9594535145926796,
+        "duplicate_rate": 0.0,
+        "latency_ms": 27.76960800110828
+      },
+      {
+        "case_id": "offline-mobile",
+        "retrieved": [
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "payments:3f98b085bf23cf3d2e50ada88f2bd91e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 29.81862099841237
+      }
+    ],
+    "lexical": [
+      {
+        "case_id": "exact-project",
+        "retrieved": [
+          "payments:3f98b085bf23cf3d2e50ada88f2bd91e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 5.514525997568853
+      },
+      {
+        "case_id": "semantic-search",
+        "retrieved": [
+          "research:62bbda4d7fbc4c5618e231064001b599",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "search:24b11d0fbf5a218998347f9fb6e550c9"
+        ],
+        "mrr": 0.3333333333333333,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 0.5,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.8982710102573037
+      },
+      {
+        "case_id": "computer-vision",
+        "retrieved": [
+          "vision:e64e395f9efbd7a5da378e2bd62501c6",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.9936679968377575
+      },
+      {
+        "case_id": "research-metric",
+        "retrieved": [
+          "research:62bbda4d7fbc4c5618e231064001b599",
+          "vision:e64e395f9efbd7a5da378e2bd62501c6"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.8776160072302446
+      },
+      {
+        "case_id": "education-date",
+        "retrieved": [
+          "education:cd006615ac643c4ba33353a2ccabb6dc",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.679913002997637
+      },
+      {
+        "case_id": "leadership-size",
+        "retrieved": [
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.900100986356847
+      },
+      {
+        "case_id": "infra-stack",
+        "retrieved": [
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "award:b80d832eb87c9526f7ff9a80f812a510"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 3.8707299972884357
+      },
+      {
+        "case_id": "accessibility",
+        "retrieved": [
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "frontend:23219149c337ac7af149d04798159257"
+        ],
+        "mrr": 0.5,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 0.6309297535714575,
+        "duplicate_rate": 0.0,
+        "latency_ms": 6.039018000592478
+      },
+      {
+        "case_id": "award-name",
+        "retrieved": [
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "education:cd006615ac643c4ba33353a2ccabb6dc"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 4.868660005740821
+      },
+      {
+        "case_id": "teaching",
+        "retrieved": [
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 0.3333333333333333,
+        "precision": 0.3333333333333333,
+        "ndcg": 0.7452525342261976,
+        "duplicate_rate": 0.0,
+        "latency_ms": 9.17859299806878
+      },
+      {
+        "case_id": "database-evidence",
+        "retrieved": [
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a"
+        ],
+        "mrr": 0.0,
+        "recall": 0.0,
+        "precision": 0.0,
+        "ndcg": 0.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 5.4280699987430125
+      },
+      {
+        "case_id": "offline-mobile",
+        "retrieved": [
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "search:24b11d0fbf5a218998347f9fb6e550c9"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 7.913569002994336
+      }
+    ],
+    "hybrid": [
+      {
+        "case_id": "exact-project",
+        "retrieved": [
+          "payments:3f98b085bf23cf3d2e50ada88f2bd91e",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 22.7251409960445
+      },
+      {
+        "case_id": "semantic-search",
+        "retrieved": [
+          "search:24b11d0fbf5a218998347f9fb6e550c9",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "research:62bbda4d7fbc4c5618e231064001b599"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 17.359669000143185
+      },
+      {
+        "case_id": "computer-vision",
+        "retrieved": [
+          "vision:e64e395f9efbd7a5da378e2bd62501c6",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 17.792883998481557
+      },
+      {
+        "case_id": "research-metric",
+        "retrieved": [
+          "research:62bbda4d7fbc4c5618e231064001b599",
+          "vision:e64e395f9efbd7a5da378e2bd62501c6",
+          "leadership:8f99d504d7331e379b25240778203a95"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 15.788333999807946
+      },
+      {
+        "case_id": "education-date",
+        "retrieved": [
+          "education:cd006615ac643c4ba33353a2ccabb6dc",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "award:b80d832eb87c9526f7ff9a80f812a510"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 19.583507993957028
+      },
+      {
+        "case_id": "leadership-size",
+        "retrieved": [
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 25.882693007588387
+      },
+      {
+        "case_id": "infra-stack",
+        "retrieved": [
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "writing:5dcf96b3b3007ae2812f750fba9f364c"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 56.63127999287099
+      },
+      {
+        "case_id": "accessibility",
+        "retrieved": [
+          "frontend:23219149c337ac7af149d04798159257",
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 20.965817995602265
+      },
+      {
+        "case_id": "award-name",
+        "retrieved": [
+          "award:b80d832eb87c9526f7ff9a80f812a510",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "leadership:8f99d504d7331e379b25240778203a95"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 18.2391840062337
+      },
+      {
+        "case_id": "teaching",
+        "retrieved": [
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a",
+          "leadership:8f99d504d7331e379b25240778203a95",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2"
+        ],
+        "mrr": 1.0,
+        "recall": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "ndcg": 0.9467676761267002,
+        "duplicate_rate": 0.0,
+        "latency_ms": 24.49758499278687
+      },
+      {
+        "case_id": "database-evidence",
+        "retrieved": [
+          "writing:5dcf96b3b3007ae2812f750fba9f364c",
+          "infra:f2f66c9e942ddd9efb42f488fa7fe3e2",
+          "volunteer:07c98fc99e578bf3502fb7e760680a7a"
+        ],
+        "mrr": 1.0,
+        "recall": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "ndcg": 0.688482449852666,
+        "duplicate_rate": 0.0,
+        "latency_ms": 29.354944999795407
+      },
+      {
+        "case_id": "offline-mobile",
+        "retrieved": [
+          "mobile:0b3a8b7c64cec5506d0c68a0669edd8e",
+          "search:24b11d0fbf5a218998347f9fb6e550c9",
+          "award:b80d832eb87c9526f7ff9a80f812a510"
+        ],
+        "mrr": 1.0,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "ndcg": 1.0,
+        "duplicate_rate": 0.0,
+        "latency_ms": 27.720660000341013
+      }
+    ]
+  },
+  "limitations": "Small synthetic development set; no general quality or production latency claim. No reranker or compression evaluated."
+}

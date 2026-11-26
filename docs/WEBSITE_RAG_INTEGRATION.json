@@ -1,0 +1,21 @@
+{
+  "verified_at": "2026-11-22T18:43:54.658Z",
+  "checks": [
+    "Authentication, CSRF, caller-scope rejection and unpublished-profile guard",
+    "Upload, extraction, evidence-linked draft and non-publishing approval",
+    "Approved publication delivered to persistent Chroma; receipt saved and outbox content cleared",
+    "Live website → retrieval → Gemini → cited answer",
+    "Unavailable semester information gives the explicit knowledge-base fallback",
+    "Second workspace cannot retrieve the first workspace snapshot",
+    "Lost receipt replay, expired lease recovery and stale-worker rejection",
+    "Real chat UI answer, Settings entry, desktop/mobile layout and no browser errors",
+    "Membership revoked during generation suppresses the in-flight answer",
+    "Source erasure blocks chat immediately and receipt waits for files plus Chroma purge",
+    "Account erasure revokes access and durable Chroma purge survives workspace cascade"
+  ],
+  "live_gemini_requests": 4,
+  "delivered_answers": 3,
+  "in_flight_revocation_checks": 1,
+  "browser_errors": [],
+  "public_deployment": false
+}

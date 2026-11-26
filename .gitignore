@@ -14,3 +14,7 @@ scripts/smoke.mjs
 *.pem
 *.key
 client_secret_*.json
+
+# Local visual review output and private resume evaluation data
+.impeccable/review/
+services/rag/fixtures/resume-qa-v1.json

@@ -17,11 +17,12 @@ import httpx
 from chroma_transport import configure_transport
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from starlette.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from execution import EmbeddingWorker, acquire, deadline, remaining
 from credentials import read_grants
 from ranking import lexical, fuse
 from quotas import check_storage, TenantRateLimit
+from parent_retrieval import child_records, rerank_parents, retrieval_policy
 
 DATA_DIR = Path(os.getenv("KB_DATA_DIR", "/data"))
 STATE_PATH = DATA_DIR / "index-state.json"
@@ -133,6 +134,73 @@ class IndexRequest(BaseModel):
         return facts
 
 
+class ChunkMetadata(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    tenant_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,100}$')
+    profile_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,100}$')
+    document_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,100}$')
+    document_version: int = Field(ge=1)
+    generation: int = Field(ge=1)
+    chunk_id: str = Field(min_length=1, max_length=133)
+    section: str = Field(min_length=1, max_length=500)
+    source_type: str = Field(min_length=1, max_length=200)
+    source_label: str = Field(min_length=1, max_length=200)
+    embedding_model: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=r'^[a-f0-9]{64}$')
+    source_content_hash: str = Field(pattern=r'^[a-f0-9]{64}$')
+    pipeline_version: Literal['rag-prep-v1', 'rag-prep-v2']
+    chunking_version: Literal['sections-4000-v1', 'section-parents-4000-v2']
+    extractor_version: Literal['rag-extract-v1', 'rag-extract-v2']
+
+
+class Chunk(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    text: str = Field(min_length=1, max_length=4000)
+    metadata: ChunkMetadata
+
+
+class RagIndexRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    subject: str = Field(default='', max_length=120)
+    operation: Literal['index'] = 'index'
+    tenant_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,100}$')
+    profile_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{1,100}$')
+    profile_version: int = Field(ge=1)
+    generation: int = Field(ge=1)
+    contract_version: Literal['rag-chunks-v1']
+    embedding_model: str = Field(min_length=1, max_length=200)
+    preprocessing_version: Literal['approved-subject-section-fact-v1', 'parent-retrieval-v3']
+    chunks: list[Chunk] = Field(min_length=1, max_length=MAX_FACTS)
+
+    @model_validator(mode='after')
+    def consistent_chunks(self):
+        seen, documents = set(), {}
+        for chunk in self.chunks:
+            meta = chunk.metadata
+            if self.preprocessing_version=='parent-retrieval-v3' and (meta.pipeline_version,meta.chunking_version)!=('rag-prep-v2','section-parents-4000-v2'):
+                raise ValueError('parent preprocessing requires v2 preparation')
+            if (meta.tenant_id, meta.profile_id, meta.generation, meta.embedding_model) != (
+                    self.tenant_id, self.profile_id, self.generation, self.embedding_model):
+                raise ValueError('chunk scope/model mismatch')
+            identity = hashlib.sha256(json.dumps([meta.chunking_version, meta.section, chunk.text], ensure_ascii=False).encode()).hexdigest()
+            if meta.chunk_id != f'{meta.document_id}:{identity[:32]}' or meta.content_hash != hashlib.sha256(chunk.text.encode()).hexdigest():
+                raise ValueError('chunk hash mismatch')
+            if meta.chunk_id in seen:
+                raise ValueError('duplicate chunk ID')
+            seen.add(meta.chunk_id)
+            provenance = (meta.document_version, meta.source_content_hash, meta.source_type, meta.source_label)
+            if documents.setdefault(meta.document_id, provenance) != provenance:
+                raise ValueError('conflicting document provenance')
+        return self
+
+    @property
+    def facts(self):
+        # Reuse the atomic snapshot lifecycle; storage/embedding ownership stays here.
+        return [Fact.model_construct(section=c.metadata.section, text=c.text,
+                                     source_label=c.metadata.source_label, fact_id=c.metadata.chunk_id)
+                for c in self.chunks]
+
+
 class PurgeRequest(BaseModel):
     operation: Literal["purge"] = "purge"
     tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
@@ -146,11 +214,25 @@ class ReconcileRequest(BaseModel):
 
 
 class QueryRequest(BaseModel):
-    mode: Literal['dense', 'hybrid'] = 'dense'
+    mode: Literal['dense', 'lexical', 'hybrid'] = 'dense'
     tenant_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     profile_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     query: str = Field(min_length=1, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=20)
+    contract_version: Literal['rag-chunks-v1'] | None = None
+    generation: int | None = Field(default=None, ge=1, strict=True)
+    profile_version: int | None = Field(default=None, ge=1, strict=True)
+    embedding_model: str | None = Field(default=None, min_length=1, max_length=200)
+    preprocessing_version: Literal['approved-subject-section-fact-v1', 'parent-retrieval-v3'] | None = None
+    snapshot: str | None = Field(default=None, pattern=r'^[a-f0-9]{64}$')
+
+    @model_validator(mode='after')
+    def complete_rag_scope(self):
+        values = (self.contract_version, self.generation, self.profile_version,
+                  self.embedding_model, self.preprocessing_version, self.snapshot)
+        if any(v is not None for v in values) and any(v is None for v in values):
+            raise ValueError('complete RAG retrieval scope required')
+        return self
 
 
 def require_key(x_kb_api_key: str | None = Header(default=None)) -> None:
@@ -177,7 +259,8 @@ async def require_scope(request: Request, x_kb_api_key: str | None = Header(defa
     if not isinstance(data.get('tenant_id'), str) or not isinstance(data.get('profile_id'), str):
         raise HTTPException(status_code=422, detail="tenant_id and profile_id must be strings")
     allowed_profiles = grant.get('profiles', {})
-    profiles = allowed_profiles.get(data.get('tenant_id'), [])
+    # Only explicitly provisioned server credentials may span workspace tenants.
+    profiles = allowed_profiles.get(data.get('tenant_id'), allowed_profiles.get('*', []))
     if operation not in grant.get('operations', []) or (data.get('profile_id') not in profiles and '*' not in profiles):
         raise HTTPException(status_code=403, detail="caller scope denied")
     tenant_rate_limit.check(data['tenant_id'], operation)
@@ -273,7 +356,7 @@ def ready(_: None = Depends(require_key)):
 
 
 @app.post("/v1/index", dependencies=[Depends(require_scope)])
-def index(req: IndexRequest):
+def index(req: IndexRequest | RagIndexRequest):
     key = f"{req.tenant_id}:{req.profile_id}"
     with acquire(lock):
         state = load_state()
@@ -324,7 +407,18 @@ def index(req: IndexRequest):
             }
             for fact in req.facts
         ]
+        if isinstance(req, RagIndexRequest):
+            for stored, chunk in zip(metadata, req.chunks):
+                stored.update(chunk.metadata.model_dump())
         embedding_inputs = [f"Profile: {req.subject}\nSection: {fact.section}\n{fact.text}" for fact in req.facts]
+        if isinstance(req,RagIndexRequest) and req.preprocessing_version == 'parent-retrieval-v3':
+            for meta in metadata:
+                meta['preprocessing_version']=req.preprocessing_version
+            children=child_records(ids,documents,metadata,req.subject)
+            if not children or len(children)>MAX_FACTS:
+                raise HTTPException(422,'child snapshot exceeds retrieval capacity')
+            check_storage(state,req.tenant_id,req.profile_id,len(children))
+            ids,documents,metadata,embedding_inputs=map(list,zip(*children))
         vectors = model.encode(embedding_inputs, normalize_embeddings=True).tolist()
         col.upsert(ids=ids, documents=documents, metadatas=metadata, embeddings=vectors)
         if len(col.get(ids=ids, include=[])["ids"]) != len(ids):
@@ -332,6 +426,10 @@ def index(req: IndexRequest):
         remaining()
         state[key] = {"profile_version": req.profile_version, "generation": req.generation, "count": len(ids), "snapshot": digest,
                       "preprocessing_version": PREPROCESSING_VERSION}
+        if isinstance(req, RagIndexRequest):
+            state[key].update(embedding_model=req.embedding_model, contract_version=req.contract_version,
+                              pipeline_version=req.chunks[0].metadata.pipeline_version,preprocessing_version=req.preprocessing_version,
+                              parent_count=len(req.chunks))
         save_state(state)
         return finish_index(col, req, state[key])
 
@@ -406,32 +504,56 @@ def purge(req: PurgeRequest):
 def query(req: QueryRequest):
     current = load_state().get(f"{req.tenant_id}:{req.profile_id}")
     if not current or current.get("purged") or current.get('generation') == 0:
+        if req.contract_version:
+            raise HTTPException(404, 'profile unavailable')
         return {"results": []}
+    if req.contract_version:
+        if any(current.get(key) != getattr(req, key) for key in (
+                'generation', 'profile_version', 'snapshot', 'contract_version',
+                'embedding_model', 'preprocessing_version')) or req.embedding_model != MODEL_NAME:
+            raise HTTPException(409, 'retrieval scope or model version mismatch')
+    elif current.get('preprocessing_version')=='parent-retrieval-v3':
+        raise HTTPException(409,'parent snapshots require complete RAG scope')
     filters = [{"tenant_id": req.tenant_id}, {"profile_id": req.profile_id}]
     if current.get("snapshot"):
         filters.append({"snapshot": current["snapshot"]})
     else:
         filters.append({"generation": current["generation"]})
     col, model = resources()
-    vector = model.encode([req.query], normalize_embeddings=True).tolist()
-    result = col.query(
-        query_embeddings=vector,
-        n_results=20 if req.mode == 'hybrid' else req.top_k,
-        where={"$and": filters},
-        include=["documents", "metadatas", "distances"],
-    )
+    result = {'ids': [[]]}
     rows = []
-    for doc, meta, distance in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
-        rows.append({"text": doc, "metadata": meta, "distance": distance})
-    if req.mode == 'hybrid':
+    dense_count, lexical_count = 0, 0
+    if req.mode != 'lexical':
+        vector = model.encode([req.query], normalize_embeddings=True).tolist()
+        result = col.query(
+            query_embeddings=vector,
+            n_results=20 if req.mode == 'hybrid' or req.preprocessing_version=='parent-retrieval-v3' else req.top_k,
+            where={"$and": filters},
+            include=["documents", "metadatas", "distances"],
+        )
+        for doc, meta, distance in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
+            rows.append({"text": doc, "metadata": meta, "distance": distance})
+        dense_count = len(rows)
+    if req.mode in {'lexical', 'hybrid'}:
         corpus = col.get(where={"$and": filters}, limit=MAX_FACTS + 1, include=['documents', 'metadatas'])
         if len(corpus['ids']) > MAX_FACTS:
             raise HTTPException(status_code=503, detail='profile exceeds hybrid retrieval limit')
         ranked = lexical(req.query, [meta['section'] + ' ' + doc for meta, doc in zip(corpus['metadatas'], corpus['documents'])])[:20]
-        ordered = fuse(result['ids'][0], [corpus['ids'][i] for i in ranked])
+        lexical_count = len(ranked)
+        lexical_ids = [corpus['ids'][i] for i in ranked]
+        ordered = fuse(result['ids'][0], lexical_ids,k=retrieval_policy()['rrf_k'] if req.preprocessing_version=='parent-retrieval-v3' else 60,
+                       dense_weight=retrieval_policy()['dense_weight'] if req.preprocessing_version=='parent-retrieval-v3' else .5) if req.mode == 'hybrid' else lexical_ids
         records = {record_id: {'text': doc, 'metadata': meta, 'distance': None}
             for record_id, doc, meta in zip(corpus['ids'], corpus['documents'], corpus['metadatas'])}
         for record_id, row in zip(result['ids'][0], rows):
             records[record_id] = row
-        rows = [records[record_id] for record_id in ordered[:req.top_k]]
+        rows = [records[record_id] for record_id in ordered[:(20 if req.preprocessing_version=='parent-retrieval-v3' else req.top_k)]]
+    if req.preprocessing_version=='parent-retrieval-v3':
+        rows=rerank_parents(req.query,rows,req.top_k)
+    if req.contract_version:
+        return {'results': rows, 'tenant_id': req.tenant_id, 'profile_id': req.profile_id,
+                **{key: current[key] for key in ('generation', 'profile_version', 'snapshot',
+                   'contract_version', 'embedding_model', 'preprocessing_version')},
+                'mode': req.mode, 'rrf_k': (retrieval_policy()['rrf_k'] if req.preprocessing_version=='parent-retrieval-v3' else 60) if req.mode == 'hybrid' else None,
+                'candidate_counts': {'dense': dense_count, 'lexical': lexical_count}}
     return {"results": rows}
