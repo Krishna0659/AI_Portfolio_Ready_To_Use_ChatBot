@@ -13,10 +13,20 @@ class AzurePilotTests(unittest.TestCase):
         self.assertEqual([n['threshold'] for n in props['notifications'].values()], [50, 80, 100])
 
     def test_unknown_or_wrong_currency_cannot_create_vm(self):
-        for currency in (None, 'INR'):
+        for currency in (None, '', 'INR'):
             with self.assertRaises(RuntimeError):
                 pilot.verify_budget({'properties': {'amount': 50, 'timeGrain': 'Monthly',
                     'currentSpend': {'unit': currency}}})
+
+    def test_portal_confirmation_only_fills_missing_currency(self):
+        for currency in (None, '', 'USD'):
+            pilot.verify_budget({'properties': {'amount': 50, 'timeGrain': 'Monthly',
+                'currentSpend': {'unit': currency}}}, portal_confirmed_usd=True)
+        for currency, amount, grain in [('INR', 50, 'Monthly'), ('', 500, 'Monthly'),
+                                        ('', 50, 'Annually')]:
+            with self.assertRaises(RuntimeError):
+                pilot.verify_budget({'properties': {'amount': amount, 'timeGrain': grain,
+                    'currentSpend': {'unit': currency}}}, portal_confirmed_usd=True)
 
     def test_budget_failure_stops_before_resource_creation(self):
         with patch.object(pilot, 'az', side_effect=[{'id': 'test', 'state': 'Enabled'}, RuntimeError('budget denied')]) as call:

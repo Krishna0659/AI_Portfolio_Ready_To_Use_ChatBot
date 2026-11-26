@@ -34,9 +34,12 @@ def budget_body(email, today):
                     'endDate': end.isoformat()+'T00:00:00Z'}, notifications=notices)}
 
 
-def verify_budget(value):
+def verify_budget(value, portal_confirmed_usd=False):
     props = value['properties']
     currency = (props.get('currentSpend') or {}).get('unit')
+    if not currency and portal_confirmed_usd:
+        currency = 'USD'
+        print('Azure omitted currency; using your explicit portal confirmation of USD.', flush=True)
     if currency != 'USD' or props.get('amount') != 50 or props.get('timeGrain') != 'Monthly':
         raise RuntimeError(f'Budget currency/amount could not be confirmed as USD 50 (currency={currency}). '
                            'No VM created. Send this message back before continuing.')
@@ -55,7 +58,7 @@ def vm_arguments(public_key):
         '--nsg', VM+'-nsg', '--nsg-rule', 'NONE', '--tags', 'managed-by='+OWNER]
 
 
-def provision(subscription, email):
+def provision(subscription, email, portal_confirmed_usd=False):
     account = az(subscription, 'account', 'show')
     if account['id'].lower() != subscription.lower() or account['state'] != 'Enabled':
         raise RuntimeError('Requested subscription is not active in this Cloud Shell session.')
@@ -67,7 +70,7 @@ def provision(subscription, email):
         payload = Path(directory)/'budget.json'
         payload.write_text(json.dumps(budget_body(email, date.today())), encoding='utf-8')
         az(subscription, 'rest', '--method', 'put', '--url', budget_url, '--body', '@'+str(payload))
-    verify_budget(az(subscription, 'rest', '--method', 'get', '--url', budget_url))
+    verify_budget(az(subscription, 'rest', '--method', 'get', '--url', budget_url), portal_confirmed_usd)
     print('Budget verified. Checking resource group ownership.', flush=True)
     groups = az(subscription, 'group', 'list')
     existing = next((g for g in groups if g['name'].lower() == GROUP), None)
@@ -111,13 +114,15 @@ if __name__ == '__main__':
     parser.add_argument('--subscription', required=True, type=lambda x: str(uuid.UUID(x)))
     parser.add_argument('--email', required=True)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--portal-confirmed-usd', action='store_true',
+                        help='Confirm the budget currency is USD in Azure Portal; only used if API currency is blank.')
     args = parser.parse_args()
     if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', args.email):
         parser.error('Supply a valid alert email address.')
     if not args.apply:
         parser.error('--apply is required: this provisions billable resources using your Azure credits.')
     try:
-        provision(args.subscription, args.email)
+        provision(args.subscription, args.email, args.portal_confirmed_usd)
     except (RuntimeError, subprocess.CalledProcessError) as exc:
         print('SETUP STOPPED:', str(exc))
         print('Do not rerun blindly. Existing disks/IPs from a partial deployment can still accrue charges; send the error for inspection.')

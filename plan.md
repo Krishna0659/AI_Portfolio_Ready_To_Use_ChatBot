@@ -4,6 +4,8 @@ Last updated: 27 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Azure currency fallback (27 November): Cloud Shell saved the monthly 50 budget and all three alerts, but returned an empty currency and stopped before VM creation. User reports the portal displays dollars. Added explicit --portal-confirmed-usd fallback for missing currency only; conflicting currencies, wrong amounts and wrong periods still fail. Five local tests pass; live provisioning remains pending.
+
 - [x] Azure pilot preparation (27 November): user explicitly approved the roughly USD 45–50/month Central India B2as_v2 pilot and USD 50 monthly email alerts. Prepared scripts/azure_pilot.py for authenticated Cloud Shell: budget verification before provisioning, 2 vCPU/8 GiB Linux VM, 64 GiB Standard SSD, no zone, no custom inbound access, ownership/rerun checks and failure stops. Four local setup tests passed. No Azure resources were created from this workspace; awaiting the user-run Cloud Shell result.
 
 - [x] Reconciled the divergent GitHub history without a force-push. Retained current RAG delivery, retry/partial worker behavior, passkeys, dependency lock and reusable utils-based 404; the remote legacy 404 implementation/dependencies are superseded. Retained remote foundation-role documentation and historical 404 checker. TypeScript, credential-pattern scans and diff whitespace checks passed after merge resolution; earlier end-to-end results were not rerun for this source-control sync.
@@ -184,6 +186,8 @@ Phase 1 Foundation is complete locally against the PRD authentication/two-tenant
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+**Azure currency follow-up:** Rerun the corrected pinned setup with explicit portal USD confirmation, then inspect the Cloud Shell provisioning summary. API currency is still unavailable; the fallback records operator confirmation rather than claiming independent API verification.
 
 **Current Azure handoff:** User authorization now covers the specified pilot infrastructure and budget, superseding the older hosting pause for that scope. Await Cloud Shell provisioning summary; inspect failures before changing VM size or retrying. Budget currency/availability must verify before VM creation. Backend installation, HTTPS, Vercel adaptation, dependency security update and public widget remain outstanding. Cloud credentials are not available locally; no deployed callback URL exists yet.
 
