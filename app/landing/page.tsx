@@ -7,10 +7,10 @@ import {siteUrl,indexable,description} from '@/utils/seo/config';
 
 export const metadata: Metadata = {
   metadataBase:siteUrl,
-  title:'PortfolioAI — Build an evidence-backed professional profile',description,
+  title:'SiteSage — Turn website content into grounded answers',description,
   robots:{index:indexable,follow:indexable},
   ...(siteUrl ? {alternates:{canonical:new URL('/landing',siteUrl).href}} : {}),
-  openGraph:{type:'website',siteName:'PortfolioAI',title:'PortfolioAI — Your work, brought together',description,...(siteUrl ? {url:new URL('/landing',siteUrl).href}: {})},
-  twitter:{card:'summary_large_image',title:'PortfolioAI — Your work, brought together',description,images:['/landing/opengraph-image']}
+  openGraph:{type:'website',siteName:'SiteSage',title:'SiteSage — Your website, ready to answer',description,...(siteUrl ? {url:new URL('/landing',siteUrl).href}: {})},
+  twitter:{card:'summary_large_image',title:'SiteSage — Your website, ready to answer',description,images:['/landing/opengraph-image']}
 };
 export default function Page() { return <LandingPage />; }

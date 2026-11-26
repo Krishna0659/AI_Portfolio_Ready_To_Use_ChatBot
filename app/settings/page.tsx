@@ -1,8 +1,8 @@
 import Dashboard from '../workspace';
 
 export const metadata = {
-  title: 'PortfolioAI — Settings',
-  description: 'Manage your profile preferences, passkeys, and account settings.'
+  title: 'SiteSage — Settings',
+  description: 'Manage your website chat preferences, passkeys, and account settings.'
 };
 
 export default function SettingsPage() {

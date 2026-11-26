@@ -1,5 +1,5 @@
 ---
-name: PortfolioAI
+name: SiteSage
 description: Lavender Paper Glass workspace for evidence, review and approval.
 colors:
   ground: "#f5efff"
@@ -91,7 +91,7 @@ components:
     padding: "15px 20px"
 ---
 
-# Design System: PortfolioAI
+# Design System: SiteSage
 
 ## Overview
 
@@ -206,3 +206,8 @@ Actions and workflow tabs use pill forms. The workflow section has 40px upper co
 - **Don't** label this initial approximation an exact reproduction, a completed reference-fidelity pass or a publicly deployed page.
 - **Don't** reuse inventoried reference artwork without appropriate rights, or imply the illustrative preview is a real product capture.
 - **Don't** describe unimplemented audio, image distortion or a conversational assistant as existing features, or equate the implemented circular exit with exact reference fidelity.
+
+
+## Authentication update — 27 November 2026
+
+SiteSage preserves the existing purple palette and animated prism at the user's request. A two-column desktop composition separates a 58–84px Cormorant editorial heading from a compact 440px plum sign-in panel. The panel uses a 27px IBM Plex Sans heading, a single Google action, clear account-creation guidance and a quiet approval note. On smaller screens the heading and form stack; focus styles, motion pause and reduced-motion preference remain. Dashboard and landing layouts/animations are preserved; their display copy is generalized to websites.

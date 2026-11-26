@@ -8,4 +8,4 @@ export function publicSiteUrl(): URL | undefined {
 }
 export const siteUrl = publicSiteUrl();
 export const indexable = Boolean(siteUrl && process.env.SEO_INDEXABLE === 'true');
-export const description = 'Build a professional profile from your website, GitHub and documents. Review the evidence, approve your profile and export it with PortfolioAI.';
+export const description = 'Bring website content, GitHub and documents into SiteSage. Review and approve your knowledge, then get answers grounded in your sources.';

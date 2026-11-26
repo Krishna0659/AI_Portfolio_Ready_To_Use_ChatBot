@@ -12,12 +12,12 @@ export default function WorkspaceSidebar({active, name, sourceCount, dirty, busy
   onNavigate: (page: string) => void; onSignOut: () => void;
 }) {
   return <aside className="sidebar">
-    <button className="brand" type="button" onClick={() => onNavigate('Overview')} aria-label="PortfolioAI overview"><span className="brand-mark">p</span>portfolio<span className="brand-ai">ai</span></button>
+    <button className="brand" type="button" onClick={() => onNavigate('Overview')} aria-label="SiteSage overview"><span className="brand-mark">s</span>Site<span className="brand-ai">Sage</span></button>
     <div className="workspace-name">Your workspace<small title={name}>{name}</small></div>
     <nav aria-label="Workspace">{pages.map((page, i) => <button key={page} type="button" className={active === page ? 'active' : ''} aria-current={active === page ? 'page' : undefined} onClick={() => onNavigate(page)}>
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[i]}/></svg>
       {page}{page === 'Sources' && <span>{sourceCount}</span>}{page === 'Review' && dirty && <span className="dot" aria-label="Unsaved changes"/>}
     </button>)}</nav>
-    <div className="sidebar-bottom"><div className="privacy-note"><strong>Your story. Your say.</strong><small>Review every fact before approving. Your profile stays private.</small></div><button type="button" disabled={busy} onClick={onSignOut}>Sign out <span aria-hidden="true">↗</span></button></div>
+    <div className="sidebar-bottom"><div className="privacy-note"><strong>Your sources. Your say.</strong><small>Review every fact before approving. Your workspace stays private.</small></div><button type="button" disabled={busy} onClick={onSignOut}>Sign out <span aria-hidden="true">↗</span></button></div>
   </aside>;
 }

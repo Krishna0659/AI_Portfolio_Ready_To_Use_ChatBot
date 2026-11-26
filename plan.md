@@ -1,8 +1,10 @@
-# PortfolioAI working plan
+# SiteSage working plan
 
 Last updated: 27 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
+
+- [x] SiteSage frontend rebrand (27 November): generalized website copy, metadata and icon; polished Google sign-in with original purple palette and animated prism. Backend contracts and infrastructure names unchanged. TypeScript and cloud production build passed; live desktop and 390px mobile sign-in plus landing visually checked. Public site responds HTTP 200. Public embedding remains separate.
 
 - [x] Cloud application hosting completed (27 November): public Vercel routing to Azure HTTPS Next.js, private PostgreSQL/Chroma/knowledge service and autonomous worker, persistent volumes and server-only credentials. Ten live cloud checks passed, 101 website tests passed, TypeScript clean, Next.js 16.4.6 npm audit clean; user confirmed Google login. Consistent encrypted backups run nightly, upload via managed identity to private Blob Storage with seven-day retention, and pass read-back checksums. Isolated database restore passed. Details and operational limits: docs/CLOUD_HOSTING.md.
 
@@ -194,6 +196,8 @@ Phase 1 Foundation is complete locally against the PRD authentication/two-tenant
 Detailed evidence and limitations: [verification](docs/VERIFICATION.md) and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## 2. Plan to execute
+
+**SiteSage follow-up:** Display branding is deployed at the existing Vercel URL; keep its Google callback unchanged. Public embeddable widget remains a separate feature.
 
 **Current handoff:** Existing dashboard hosting is complete. Earlier hosting-paused, currency and local-only entries below are historical. Next feature work is the public embeddable widget/endpoint/domain controls/rate limits/publish switch; broader sustained-load and full host-loss drills remain operational follow-ups, not claimed as performed.
 
