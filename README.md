@@ -1,54 +1,141 @@
-# PortfolioAI — local Phase 1 workspace
+# SiteSage
 
-Working local source imports and profile review. **Read [implementation status](docs/IMPLEMENTATION_STATUS.md) before treating this as a completed production Phase 1.** Follow [the working plan](plan.md): hosting is paused throughout every phase and happens only after all website phases are complete and the website passes end-to-end checks. The current workspace is intended for local verification.
+> Turn website content, repositories and documents into reviewed, evidence-backed answers.
 
-## Open
+[Open SiteSage](https://portfolioai-mu.vercel.app) · [Cloud operations](docs/CLOUD_HOSTING.md) · [RAG integration](docs/WEBSITE_RAG_INTEGRATION.md)
 
-Visit http://localhost:3000 and choose **Open local development workspace**. The supplied portfolio, PaySure README and résumé have been imported as separate sources. No combined profile has been approved on your behalf.
+SiteSage is an authenticated knowledge workspace for any website. It captures source material, lets the owner review every extracted fact, and makes only approved versions available to a private, cited AI chat.
 
-1. Sources → choose a source → inspect evidence → Add to draft.
-2. Review → edit name, headline, sections and facts → Save draft.
-3. Confirm review and any incomplete imports → Approve version.
-4. Versions → download JSON or Markdown. Restore creates a draft requiring another approval.
+## What it does
 
-Settings → Theme changes the whole workspace immediately; **Save settings** persists the choice. System follows your operating-system preference. Failed imports can be retried on their existing source; quota-limited GitHub imports display a waiting time and retry automatically. When multiple successful captures exist, Source evidence shows an expandable added/removed-line comparison.
+- Imports website pages, GitHub documentation and uploaded documents.
+- Extracts evidence with provenance, supports review/editing, and creates immutable approved versions.
+- Builds a private Chroma vector index only from approved content.
+- Answers with calibrated parent-child retrieval, hybrid ranking and cross-encoder reranking.
+- Shows source citations and clearly distinguishes unavailable knowledge from a model/service error.
+- Gives each user their own workspace, sources, versions, audit trail and chat access.
+- Supports Google sign-in and optional passkeys.
+- Exports approved knowledge as JSON or Markdown, with restores returning to a reviewable draft.
+- Removes source content from the application and queues the matching vector purge when a source or account is erased.
 
-The web process and import worker should stay running together during local use so queued imports and file cleanup can finish.
+## Owner workflow
 
-## Run on this Windows workspace
+```mermaid
+flowchart LR
+  A[Add a source] --> B[Extract evidence]
+  B --> C[Review and edit draft]
+  C --> D[Approve immutable version]
+  D --> E{Publish to chat?}
+  E -- No --> F[Private version and export]
+  E -- Yes --> G[Worker indexes approved snapshot]
+  G --> H[Private cited chat]
+```
 
-The initial setup is already complete. In separate terminals from this directory:
+Drafts, raw imports and un-published approvals are not chat knowledge. Publishing is an explicit owner decision.
+
+## How answers are created
+
+```mermaid
+flowchart TD
+  Q[Authenticated question] --> A[Confirm workspace access and active approval]
+  A --> B[Retrieve child chunks from Chroma]
+  B --> C[Hybrid rank: dense + lexical RRF]
+  C --> D[Deduplicate and rerank parent context]
+  D --> E{Sufficient approved context?}
+  E -- No --> F[Clear knowledge-base fallback]
+  E -- Yes --> G[Gemini answer with citations]
+  G --> H[Recheck access and snapshot]
+  H --> I[Return answer]
+```
+
+The retrieval policy uses 48-token child chunks with a 12-token overlap, parent-context reranking, a 256-token embedding admission limit, calibrated hybrid fusion, and a pinned cross-encoder. Query expansion and semantic pre-filtering remain disabled because calibration did not show an improvement.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Website owner] --> V[Vercel public route]
+  V --> W[Next.js web application]
+  W --> P[(PostgreSQL)]
+  W --> K[Knowledge API]
+  K --> C[(Chroma)]
+  W --> G[Gemini]
+  X[Background worker] --> P
+  X --> K
+  W --> O[Private object storage]
+  B[Encrypted nightly backup] --> Z[Private Azure Blob Storage]
+  P -.snapshot.-> B
+  C -.snapshot.-> B
+  O -.snapshot.-> B
+```
+
+The public URL is routed through Vercel to an Azure-hosted application stack. Docker Compose runs the web app, background worker, PostgreSQL, Chroma, knowledge service and HTTPS proxy. Only HTTP/HTTPS are publicly reachable; the database, vector database and knowledge API remain on private container networking.
+
+## Security and data controls
+
+- API keys and RAG credentials stay server-side; no browser receives a database, Chroma or Gemini key.
+- PostgreSQL uses separate runtime, identity, worker and administrator roles.
+- Each request is scoped to the authenticated workspace; chat also rechecks membership and the exact approved snapshot after generation.
+- Publishing, source removal and account removal are durable background jobs with leases, retries and receipt tracking.
+- The knowledge bridge permits the website only to index, query, inspect status and purge the approved-profile dataset.
+- Backup archives use AES-256-CBC with PBKDF2 and are uploaded using an Azure managed identity to a private Blob container.
+- Logs are capped per service, containers restart automatically, and temporary SSH access is restricted to the operator's IP then removed.
+
+## Deployment and verification
+
+The deployed service has been checked end-to-end with real upload, extraction, approval, vector indexing, cited answers, missing-information fallback, tenant isolation, source invalidation and account erasure. Google sign-in was manually confirmed on the live dashboard.
+
+Current automated checks include:
+
+| Area | Evidence |
+| --- | --- |
+| Website | 101 passing tests, TypeScript check and Next.js build |
+| RAG integration | 73 RAG tests; 11 cloud integration checks using persistent Chroma and Gemini |
+| Knowledge service | 46 checks, with two SDK-specific checks skipped in that run |
+| Supply-chain check | `npm audit` reported zero known vulnerabilities after Next.js 16.4.6 |
+| Backup | Encrypted upload/read-back checksum and isolated PostgreSQL restore |
+
+Operational health is exposed at `/api/health`. Backups run nightly at 03:00 IST and retain seven days of encrypted snapshots. See [Cloud hosting](docs/CLOUD_HOSTING.md) for recovery steps, cost context and known limits.
+
+This is a small single-VM deployment. It does not claim high availability, sustained load testing, a complete VM-loss recovery drill, or guaranteed third-party model uptime.
+
+## Run locally
+
+Requirements: Node.js, PostgreSQL, Python and Docker. Copy the documented server settings from [`.env.example`](.env.example) into ignored local configuration; never commit credentials.
 
 ```powershell
-& 'C:/Program Files/PostgreSQL/16/bin/pg_ctl.exe' -D .local/postgres -l .local/postgres.log -o '-p 55432 -h 127.0.0.1' start
+npm ci
+npm run db:setup
 npm run dev
+```
+
+In a second terminal, run the background worker:
+
+```powershell
 npm run worker
 ```
 
-`npm run worker` must run in a second terminal while the web process runs. If PostgreSQL is already running, do not start another instance.
+For the full local RAG stack, follow [Website, RAG and Chroma integration](docs/WEBSITE_RAG_INTEGRATION.md). It documents the required knowledge service, local embedding/reranking models and server-only Gemini configuration.
 
-For a fresh machine: install Node LTS, PostgreSQL and Python; `npm ci`; adapt `scripts/local-init.mjs` paths; run it; install `services/extraction/requirements.txt` into `.local/python-packages`; `npm run db:setup`. Configuration is local and ignored by Git. The initializer will not overwrite existing configuration.
-
-The disposable Linux baseline is documented in [Foundation testing](docs/FOUNDATION_TESTING.md); it does not use the local database or imported sources.
-
-## Google sign-in
-
-Google sign-in is configured and was verified interactively with two accounts on 1 November 2026. Each identity has a separate workspace; the supplied references remain in the local development workspace. See [Google setup and verification](docs/GOOGLE_SIGN_IN.md).
-
-For another installation, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and a random 32-byte hex `OIDC_FLOW_KEY` in `.env.local`. The local initializer generates the encryption key. Register `http://localhost:3000/api/auth/callback` and keep `APP_ORIGIN` exactly `http://localhost:3000`. Development remains loopback-only.
-
-## Checks
+## Useful commands
 
 ```powershell
 npm run check
 npm test
 npm run build
-node scripts/api-check.mjs
-node scripts/browser-check.mjs
+node scripts/verify-rag-integration.ts
 ```
 
-API/browser checks need the web/database processes. Browser check uses installed Edge. `scripts/smoke.mjs` imports the user-supplied references and uses a machine-specific résumé path; do not run it as a generic CI fixture. It records status/counts without copying résumé text into reports.
+The RAG verification script uses disposable identities and removes its own test data. Run it only against a controlled environment with the ordinary worker stopped, as described in the integration guide.
 
-## Privacy
+## Project scope
 
-No LLM, embeddings, public hosting or chat runtime. Imported content lives in local PostgreSQL and `.local/objects`. Exported files leave the app's deletion boundary. Source erasure removes all versions linked to that source, not just the current version. Local account erasure includes durable file cleanup and requires verified recent authentication. Google sessions without a recent provider authentication-time claim cannot erase data. Production retention, backups, malware scanning and isolation remain open in the implementation status.
+SiteSage currently provides private, authenticated workspace chat. A public embeddable visitor widget and public chat endpoint are planned separately and are not part of the deployed product.
+
+## Documentation
+
+- [Cloud hosting and operations](docs/CLOUD_HOSTING.md)
+- [Website, RAG and Chroma integration](docs/WEBSITE_RAG_INTEGRATION.md)
+- [RAG configuration and calibration](docs/RAG_FINAL_CONFIGURATION.md)
+- [Implementation history and checks](plan.md)
+- [Security and verification evidence](docs/CLOUD_HOSTING_VERIFICATION.json)
