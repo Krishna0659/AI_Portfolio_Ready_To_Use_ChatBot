@@ -4,6 +4,8 @@ Last updated: 27 November 2026 (Asia/Calcutta).
 
 ## 1. Completed so far
 
+- [x] Public-root routing (27 November): opening the SiteSage base URL now redirects to the existing landing page at `/landing`; workspace access is preserved at `/workspace`, including the landing-page action, workspace tab URLs and Google sign-in return. TypeScript check passed. Production build is blocked in this environment because Turbopack cannot create its required Windows junction point.
+
 - [x] SiteSage frontend rebrand (27 November): generalized website copy, metadata and icon; polished Google sign-in with original purple palette and animated prism. Backend contracts and infrastructure names unchanged. TypeScript and cloud production build passed; live desktop and 390px mobile sign-in plus landing visually checked. Public site responds HTTP 200. Public embedding remains separate.
 
 - [x] Cloud application hosting completed (27 November): public Vercel routing to Azure HTTPS Next.js, private PostgreSQL/Chroma/knowledge service and autonomous worker, persistent volumes and server-only credentials. Ten live cloud checks passed, 101 website tests passed, TypeScript clean, Next.js 16.4.6 npm audit clean; user confirmed Google login. Consistent encrypted backups run nightly, upload via managed identity to private Blob Storage with seven-day retention, and pass read-back checksums. Isolated database restore passed. Details and operational limits: docs/CLOUD_HOSTING.md.

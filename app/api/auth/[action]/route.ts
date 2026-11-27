@@ -29,7 +29,7 @@ export async function GET(req:Request,{params}:{params:Promise<{action:string}>}
   const identity=await verifyGoogleCallback(c,new URL(process.env.APP_ORIGIN+url.pathname+url.search),f,state);stage='account';
   if(f.reauth)await completeGoogleReauth(f.reauth,await session(),identity);
   else await login(identity.issuer,identity.subject,identity.name,identity.authenticatedAt);
-  (await cookies()).delete('oidc_state');return NextResponse.redirect(new URL('/',process.env.APP_ORIGIN));
+  (await cookies()).delete('oidc_state');return NextResponse.redirect(new URL('/workspace',process.env.APP_ORIGIN));
  }
  return NextResponse.json({error:'Not found'},{status:404});
  }catch(error){const diagnostic=authDiagnostic(stage,error);await mkdir('.local',{recursive:true});await appendFile('.local/auth-diagnostics.jsonl',JSON.stringify(diagnostic)+'\n').catch(()=>{});return NextResponse.json({error:authErrorMessage(stage),reference:diagnostic.reference},{status:400,headers:{'Cache-Control':'no-store'}});}}

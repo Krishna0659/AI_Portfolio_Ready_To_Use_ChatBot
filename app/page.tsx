@@ -1,2 +1,3 @@
-import Dashboard from './workspace';
-export default function Page(){return <Dashboard/>;}
+import {redirect} from 'next/navigation';
+
+export default function Page(){redirect('/landing');}
